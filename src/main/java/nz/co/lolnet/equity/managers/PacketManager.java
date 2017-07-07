@@ -1,0 +1,126 @@
+/*
+ * Copyright 2017 lolnet.co.nz
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package nz.co.lolnet.equity.managers;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import nz.co.lolnet.equity.entries.AbstractPacket;
+import nz.co.lolnet.equity.entries.Connection;
+import nz.co.lolnet.equity.entries.Connection.ConnectionState;
+import nz.co.lolnet.equity.entries.Packet;
+import nz.co.lolnet.equity.entries.Packet.PacketDirection;
+import nz.co.lolnet.equity.entries.PacketData;
+import nz.co.lolnet.equity.packets.CPacketHandshake;
+import nz.co.lolnet.equity.packets.CPacketLoginStart;
+import nz.co.lolnet.equity.packets.CPacketPing;
+import nz.co.lolnet.equity.packets.CPacketServerInfo;
+import nz.co.lolnet.equity.packets.SPacketPong;
+import nz.co.lolnet.equity.packets.SPacketServerInfo;
+import nz.co.lolnet.equity.util.LogHelper;
+import io.netty.buffer.ByteBuf;
+
+public class PacketManager {
+	
+	private final Map<Class<? extends AbstractPacket>, List<PacketData>> registeredPackets;
+	
+	public PacketManager() {
+		registeredPackets = new HashMap<Class<? extends AbstractPacket>, List<PacketData>>();
+	}
+	
+	public void registerPackets() {
+		getRegisteredPackets().put(CPacketHandshake.class, Arrays.asList(
+				new PacketData(0, 0, ConnectionState.HANDSHAKE, PacketDirection.SERVERBOUND)));
+		getRegisteredPackets().put(CPacketLoginStart.class, Arrays.asList(
+				new PacketData(0, 0, ConnectionState.LOGIN, PacketDirection.SERVERBOUND)));
+		getRegisteredPackets().put(CPacketPing.class, Arrays.asList(
+				new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.SERVERBOUND)));
+		getRegisteredPackets().put(CPacketServerInfo.class, Arrays.asList(
+				new PacketData(0, 0, ConnectionState.STATUS, PacketDirection.SERVERBOUND)));
+		getRegisteredPackets().put(SPacketPong.class, Arrays.asList(
+				new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND)));
+		getRegisteredPackets().put(SPacketServerInfo.class, Arrays.asList(
+				new PacketData(0, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND)));
+	}
+	
+	public void process(Connection connection, Packet packet, PacketDirection packetDirection) {
+		try {
+			if (connection == null || packet == null || packetDirection == null) {
+				return;
+			}
+			
+			if (connection.getConnectionState() == null || (connection.getConnectionState().equals(ConnectionState.PLAY) && connection.isEncrypted())) {
+				throw new IllegalStateException("Cannot process encrypted packets!");
+			}
+			
+			int packetId = packet.readVarInt();
+			LogHelper.debug("PacketId - " + packetId + ", Direction - " + packetDirection.name() + ", State - " + connection.getConnectionState().name());
+			for (Iterator<Entry<Class<? extends AbstractPacket>, List<PacketData>>> iterator = getRegisteredPackets().entrySet().iterator(); iterator.hasNext();) {
+				Entry<Class<? extends AbstractPacket>, List<PacketData>> entry = iterator.next();
+				PacketData targetPacketData = new PacketData(packetId, connection.getProtocolVersion(), connection.getConnectionState(), packetDirection);
+				if (entry == null || !checkPacketData(targetPacketData, entry.getValue())) {
+					continue;
+				}
+				
+				AbstractPacket abstractPacket = entry.getKey().newInstance();
+				abstractPacket.read(connection, packet);
+				resetByteBuf(packet.getByteBuf());
+				return;
+			}
+		} catch (ExceptionInInitializerError | IllegalAccessException | InstantiationException | RuntimeException ex) {
+			LogHelper.error("Encountered an error processing 'process' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
+			ex.printStackTrace();
+		}
+		resetByteBuf(packet.getByteBuf());
+	}
+	
+	private boolean checkPacketData(PacketData targetPacketData, List<PacketData> packetDatas) {
+		if (targetPacketData == null || targetPacketData.getConnectionState() == null || targetPacketData.getPacketDirection() == null || packetDatas == null) {
+			return false;
+		}
+		
+		for (Iterator<PacketData> iterator = packetDatas.iterator(); iterator.hasNext();) {
+			PacketData packetData = iterator.next();
+			if (packetData == null || packetData.getConnectionState() == null || packetData.getPacketDirection() == null) {
+				continue;
+			}
+			
+			if (!packetData.getConnectionState().equals(targetPacketData.getConnectionState()) || !packetData.getPacketDirection().equals(targetPacketData.getPacketDirection())) {
+				continue;
+			}
+			
+			if (packetData.getProtocolVersion() <= targetPacketData.getProtocolVersion() && packetData.getPacketId() == targetPacketData.getPacketId()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private void resetByteBuf(ByteBuf byteBuf) {
+		if (byteBuf.readerIndex() != 0) {
+			byteBuf.resetReaderIndex();
+		}
+	}
+	
+	public Map<Class<? extends AbstractPacket>, List<PacketData>> getRegisteredPackets() {
+		return registeredPackets;
+	}
+}

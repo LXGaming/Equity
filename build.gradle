@@ -1,0 +1,63 @@
+apply plugin: "java"
+
+def signFile = "sign.gradle"
+if (file(signFile).exists()) {
+    apply from: signFile
+}
+
+targetCompatibility = 1.8
+sourceCompatibility = 1.8
+
+group = "nz.co.lolnet.equity"
+archivesBaseName = "Equity"
+version = "1.0.0"
+
+configurations {
+    provided {
+        compile.extendsFrom(provided)
+    }
+
+    build {
+        if (project.tasks.findByName("signJar")) {
+            return finalizedBy(signJar)
+        }
+
+        return doLast {
+            println("========== [WARNING] ==========")
+            println()
+            println("   This build is not signed!   ")
+            println()
+            println("========== [WARNING] ==========")
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile("com.google.code.gson:gson:2.8.1")
+    compile("io.netty:netty-all:4.1.12.Final")
+    compile("org.apache.commons:commons-lang3:3.6")
+}
+
+jar {
+    manifest {
+        attributes("Main-Class": "nz.co.lolnet.equity.Main")
+    }
+
+    from {
+        (configurations.compile - configurations.provided).collect {
+            if (it.isDirectory()) {
+                return it
+            }
+            return zipTree(it)
+        }
+    }
+}
+
+processResources {
+    from("LICENSE")
+    rename("LICENSE", "LICENSE-" + archivesBaseName)
+}
