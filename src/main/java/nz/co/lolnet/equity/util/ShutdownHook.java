@@ -35,6 +35,7 @@ public class ShutdownHook extends Thread {
 		if (Equity.getInstance() != null) {
 			shutdownProxy();
 		}
+		
 		LogHelper.info("Shutdown complete.");
 	}
 	
@@ -69,6 +70,7 @@ public class ShutdownHook extends Thread {
 				Equity.getInstance().getProxyManager().getServerBootstrap().config().group().awaitTermination(Equity.getInstance().getConfig().getShutdownTimeout(), TimeUnit.MILLISECONDS);
 				LogHelper.info("Closed EventLoopGroup.");
 			}
+			
 		} catch (InterruptedException | RuntimeException ex) {
 			LogHelper.error("Encountered an error processing 'shutdownProxy' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
 			ex.printStackTrace();
