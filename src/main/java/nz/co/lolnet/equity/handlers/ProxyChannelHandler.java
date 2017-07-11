@@ -16,9 +16,11 @@
 
 package nz.co.lolnet.equity.handlers;
 
-import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
+import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
+import nz.co.lolnet.equity.Equity;
+import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
 
 public class ProxyChannelHandler extends ChannelInitializer<Channel> {
 	
@@ -30,18 +32,22 @@ public class ProxyChannelHandler extends ChannelInitializer<Channel> {
 	
 	@Override
 	protected void initChannel(Channel channel) {
-		channel.pipeline().addFirst(new ProxyDecodingHandler(getConnectionSide()));
+		channel.pipeline().addFirst("ProxyDecoder", new ProxyDecodingHandler(getConnectionSide()));
 		
 		if (getConnectionSide() != null && getConnectionSide().equals(ConnectionSide.CLIENT)) {
-			channel.pipeline().addFirst(new ProxyLegacyHandler());
-			channel.pipeline().addLast(new ProxyClientHandler());
+			channel.pipeline().addFirst("ProxyLegacy", new ProxyLegacyHandler());
+			if (Equity.getInstance().getConfig().isProxyProtocol()) {
+				channel.pipeline().addFirst("HAProxyMessageDecoder", new HAProxyMessageDecoder());
+			}
+			
+			channel.pipeline().addLast("ProxyClient", new ProxyClientHandler());
 		}
 		
 		if (getConnectionSide() != null && getConnectionSide().equals(ConnectionSide.SERVER)) {
-			channel.pipeline().addLast(new ProxyServerHandler());
+			channel.pipeline().addLast("ProxyServer", new ProxyServerHandler());
 		}
 		
-		channel.pipeline().addLast(new ProxyEncodingHandler(getConnectionSide()));
+		channel.pipeline().addLast("ProxyEncoder", new ProxyEncodingHandler(getConnectionSide()));
 	}
 	
 	private ConnectionSide getConnectionSide() {

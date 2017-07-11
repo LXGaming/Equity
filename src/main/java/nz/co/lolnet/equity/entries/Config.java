@@ -24,6 +24,7 @@ public class Config {
 	private boolean debug;
 	private int port;
 	private boolean nativeTransport;
+	private boolean proxyProtocol;
 	private int maxConnections;
 	private int socketBacklog;
 	private int connectTimeout;
@@ -34,6 +35,7 @@ public class Config {
 		setDebug(false);
 		setPort(25555);
 		setNativeTransport(true);
+		setProxyProtocol(false);
 		setMaxConnections(32);
 		setSocketBacklog(64);
 		setConnectTimeout(2500);
@@ -63,6 +65,14 @@ public class Config {
 	
 	private void setNativeTransport(boolean nativeTransport) {
 		this.nativeTransport = nativeTransport;
+	}
+	
+	public boolean isProxyProtocol() {
+		return proxyProtocol;
+	}
+	
+	public void setProxyProtocol(boolean proxyProtocol) {
+		this.proxyProtocol = proxyProtocol;
 	}
 	
 	public int getMaxConnections() {

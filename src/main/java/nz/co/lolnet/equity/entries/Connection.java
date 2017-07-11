@@ -16,6 +16,7 @@
 
 package nz.co.lolnet.equity.entries;
 
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,9 +29,10 @@ public class Connection {
 	private final List<Packet> packetQueue;
 	private Channel clientChannel;
 	private Channel serverChannel;
-	private String username;
-	private int protocolVersion;
 	private ConnectionState connectionState;
+	private SocketAddress socketAddress;
+	private int protocolVersion;
+	private String username;
 	private boolean encrypted;
 	
 	public Connection() {
@@ -68,6 +70,18 @@ public class Connection {
 		return false;
 	}
 	
+	public SocketAddress getAddress() {
+		if (getSocketAddress() != null) {
+			return getSocketAddress();
+		}
+		
+		if (getClientChannel() != null && getClientChannel().localAddress() != null) {
+			return getClientChannel().localAddress();
+		}
+		
+		return null;
+	}
+	
 	public List<Packet> getPacketQueue() {
 		return packetQueue;
 	}
@@ -88,19 +102,20 @@ public class Connection {
 		this.serverChannel = serverChannel;
 	}
 	
-	public String getUsername() {
-		return username;
+	public ConnectionState getConnectionState() {
+		return connectionState;
 	}
 	
-	public boolean hasUsername() {
-		if (StringUtils.isNotBlank(getUsername())) {
-			return true;
-		}
-		return false;
+	public void setConnectionState(ConnectionState connectionState) {
+		this.connectionState = connectionState;
 	}
 	
-	public void setUsername(String username) {
-		this.username = username;
+	public SocketAddress getSocketAddress() {
+		return socketAddress;
+	}
+	
+	public void setSocketAddress(SocketAddress socketAddress) {
+		this.socketAddress = socketAddress;
 	}
 	
 	public int getProtocolVersion() {
@@ -111,12 +126,20 @@ public class Connection {
 		this.protocolVersion = protocolVersion;
 	}
 	
-	public ConnectionState getConnectionState() {
-		return connectionState;
+	public String getUsername() {
+		return username;
 	}
 	
-	public void setConnectionState(ConnectionState connectionState) {
-		this.connectionState = connectionState;
+	public boolean hasUsername() {
+		if (StringUtils.isNotBlank(getUsername())) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public void setUsername(String username) {
+		this.username = username;
 	}
 	
 	public boolean isEncrypted() {
@@ -149,6 +172,7 @@ public class Connection {
 			if (equals(ConnectionSide.SERVER)) {
 				return ConnectionSide.CLIENT;
 			}
+			
 			return null;
 		}
 		

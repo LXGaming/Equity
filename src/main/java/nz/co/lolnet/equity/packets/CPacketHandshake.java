@@ -33,7 +33,7 @@ public class CPacketHandshake extends AbstractPacket {
 	public void read(Connection connection, Packet packet) {
 		setProtocolVersion(packet.readVarInt());
 		setServerAddress(packet.readString());
-		setServerPort(packet.readVarShort());
+		setServerPort(packet.getByteBuf().readUnsignedShort());
 		setState(packet.readVarInt());
 		
 		connection.setProtocolVersion(getProtocolVersion());

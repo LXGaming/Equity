@@ -16,19 +16,19 @@
 
 package nz.co.lolnet.equity.handlers;
 
-import nz.co.lolnet.equity.Equity;
-import nz.co.lolnet.equity.entries.Connection;
-import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
-import nz.co.lolnet.equity.entries.Packet;
-import nz.co.lolnet.equity.util.LogHelper;
+import java.util.List;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.util.ReferenceCountUtil;
+import io.netty.handler.codec.ByteToMessageDecoder;
+import nz.co.lolnet.equity.Equity;
+import nz.co.lolnet.equity.entries.Connection;
+import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
+import nz.co.lolnet.equity.util.LogHelper;
 
-public class ProxyLegacyHandler extends ChannelInboundHandlerAdapter {
+public class ProxyLegacyHandler extends ByteToMessageDecoder {
 	
 	private final ConnectionSide connectionSide;
 	
@@ -37,38 +37,31 @@ public class ProxyLegacyHandler extends ChannelInboundHandlerAdapter {
 	}
 	
 	@Override
-	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if (msg == null || !(msg instanceof ByteBuf)) {
-			throw new IllegalArgumentException("Illegal message received!");
-		}
-		
-		Packet packet = new Packet(((ByteBuf) msg).retain());
+	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
 		if (connection == null || connection.getConnectionState() == null) {
 			throw new IllegalStateException(getConnectionSide() + " Connection error!");
 		}
 		
-		if (!packet.getByteBuf().isReadable()) {
-			ReferenceCountUtil.release(packet.getByteBuf());
+		if (!in.isReadable()) {
 			return;
 		}
 		
-		packet.getByteBuf().markReaderIndex();
-		short packetId = packet.getByteBuf().readUnsignedByte();
-		if (packetId == 254 && packet.getByteBuf().isReadable() && packet.getByteBuf().readUnsignedByte() == 1) {
-			ReferenceCountUtil.release(packet.getByteBuf());
+		in.markReaderIndex();
+		short packetId = in.readUnsignedByte();
+		if (packetId == 254 && in.isReadable() && in.readUnsignedByte() == 1) {
+			in.skipBytes(in.readableBytes());
 			return;
 		}
 		
-		if (packetId == 2 && packet.getByteBuf().isReadable()) {
-			ReferenceCountUtil.release(packet.getByteBuf());
+		if (packetId == 2 && in.isReadable()) {
+			in.skipBytes(in.readableBytes());
 			connection.getClientChannel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
 			return;
 		}
 		
-		packet.getByteBuf().resetReaderIndex();
+		in.resetReaderIndex();
 		ctx.pipeline().remove(this);
-		super.channelRead(ctx, msg);
 	}
 	
 	@Override

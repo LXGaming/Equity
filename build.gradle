@@ -38,7 +38,7 @@ repositories {
 
 dependencies {
     compile("com.google.code.gson:gson:2.8.1")
-    compile("io.netty:netty-all:4.1.12.Final")
+    compile("io.netty:netty-all:4.1.13.Final")
     compile("org.apache.commons:commons-lang3:3.6")
 }
 

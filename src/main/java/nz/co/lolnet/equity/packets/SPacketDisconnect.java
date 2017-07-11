@@ -36,7 +36,6 @@ public class SPacketDisconnect extends AbstractPacket {
 			throw new IllegalStateException("Cannot disconnect encrypted connection!");
 		}
 		
-		packet.clearByteBuf();
 		packet.writeVarInt(0);
 		packet.writeString(getReason());
 		connection.getClientChannel().writeAndFlush(packet.getByteBuf()).addListener(ChannelFutureListener.CLOSE);

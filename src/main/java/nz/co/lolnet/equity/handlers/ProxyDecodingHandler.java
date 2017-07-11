@@ -18,17 +18,17 @@ package nz.co.lolnet.equity.handlers;
 
 import java.util.List;
 
-import nz.co.lolnet.equity.Equity;
-import nz.co.lolnet.equity.entries.Connection;
-import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
-import nz.co.lolnet.equity.entries.Connection.ConnectionState;
-import nz.co.lolnet.equity.entries.Packet;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.CorruptedFrameException;
+import nz.co.lolnet.equity.Equity;
+import nz.co.lolnet.equity.entries.Connection;
+import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
+import nz.co.lolnet.equity.entries.Connection.ConnectionState;
+import nz.co.lolnet.equity.entries.Packet;
 
 public class ProxyDecodingHandler extends ByteToMessageDecoder {
 	

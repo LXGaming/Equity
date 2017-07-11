@@ -16,6 +16,14 @@
 
 package nz.co.lolnet.equity.handlers;
 
+import java.net.InetSocketAddress;
+
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.haproxy.HAProxyMessage;
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
@@ -24,11 +32,6 @@ import nz.co.lolnet.equity.entries.Packet;
 import nz.co.lolnet.equity.entries.Packet.PacketDirection;
 import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.LogHelper;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 
 public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 	
@@ -50,25 +53,29 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 	
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if (msg == null || !(msg instanceof Packet)) {
-			throw new IllegalArgumentException("Illegal message received!");
-		}
-		
-		Packet packet = (Packet) msg;
 		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
 		if (connection == null || connection.getConnectionState() == null) {
 			throw new IllegalStateException(getConnectionSide() + " Connection error!");
 		}
 		
-		Equity.getInstance().getPacketManager().process(connection, packet, PacketDirection.SERVERBOUND);
-		
-		Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
-		if (channel == null) {
-			connection.getPacketQueue().add(packet);
+		if (msg instanceof HAProxyMessage && Equity.getInstance().getConfig().isProxyProtocol()) {
+			HAProxyMessage haProxyMessage = (HAProxyMessage) msg;
+			Equity.getInstance().getConnectionManager().setSocketAddress(connection, new InetSocketAddress(haProxyMessage.sourceAddress(), haProxyMessage.sourcePort()));
 			return;
 		}
 		
-		channel.writeAndFlush(packet.getByteBuf()).addListener(EquityUtil.getFutureListener(ctx.channel()));
+		if (msg instanceof Packet) {
+			Packet packet = (Packet) msg;
+			Equity.getInstance().getPacketManager().process(connection, packet, PacketDirection.SERVERBOUND);
+			
+			Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
+			if (channel == null) {
+				connection.getPacketQueue().add(packet);
+				return;
+			}
+			
+			channel.writeAndFlush(packet.getByteBuf()).addListener(EquityUtil.getFutureListener(ctx.channel()));
+		}
 	}
 	
 	@Override

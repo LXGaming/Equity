@@ -51,9 +51,9 @@ public class ShutdownHook extends Thread {
 					if (connection != null && connection.getClientChannel() != null) {
 						connection.getClientChannel().close();
 						if (connection.hasUsername()) {
-							LogHelper.info("Disconnected " + connection.getUsername() + " (" + EquityUtil.getAddress(connection.getClientChannel().localAddress()) + ")...");
+							LogHelper.info("Disconnected " + connection.getUsername() + " (" + EquityUtil.getAddress(connection.getAddress()) + ")...");
 						} else {
-							LogHelper.info("Disconnected " + EquityUtil.getAddress(connection.getClientChannel().localAddress()) + "...");
+							LogHelper.info("Disconnected " + EquityUtil.getAddress(connection.getAddress()) + "...");
 						}
 					}
 					

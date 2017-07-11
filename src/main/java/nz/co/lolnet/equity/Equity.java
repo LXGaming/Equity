@@ -50,7 +50,7 @@ public class Equity {
 		});
 		
 		LogHelper.info("Initializing...");
-		if (getConfiguration() == null || !getConfiguration().loadConfiguration()) {
+		if (getConfiguration() == null || !getConfiguration().loadConfiguration() || !getConfiguration().saveConfiguration()) {
 			LogHelper.error("Unable to load " + Reference.APP_NAME + " as the Configurations are not available!");
 		}
 		

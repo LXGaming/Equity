@@ -32,7 +32,7 @@ public class CPacketLoginStart extends AbstractPacket {
 		setUsername(packet.readString());
 		connection.setUsername(getUsername());
 		connection.setConnectionState(ConnectionState.PLAY);
-		LogHelper.info(EquityUtil.getAddress(connection.getClientChannel().localAddress()) + " -> " + getUsername() + ".");
+		LogHelper.info(EquityUtil.getAddress(connection.getAddress()) + " -> " + getUsername() + ".");
 	}
 	
 	public String getUsername() {

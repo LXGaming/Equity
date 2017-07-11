@@ -82,7 +82,7 @@ public class ProxyManager {
 			Server server = Equity.getInstance().getServerManager().getServer(connection.getProtocolVersion());
 			if (server == null) {
 				LogHelper.warn("Failed to find server handling protocol " + connection.getProtocolVersion());
-				connection.getClientChannel().close();
+				Equity.getInstance().getConnectionManager().kickConnection(connection, "Failed to find server handling protocol " + connection.getProtocolVersion());
 				return;
 			}
 			
