@@ -21,12 +21,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
-import nz.co.lolnet.equity.entries.Packet;
-import nz.co.lolnet.equity.packets.SPacketDisconnect;
 import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.LogHelper;
 
@@ -44,7 +41,7 @@ public class ConnectionManager {
 		}
 		
 		getConnections().add(connection);
-		LogHelper.info(EquityUtil.getAddress(connection.getAddress()) + " -> Connected.");
+		LogHelper.info(String.join(" ", EquityUtil.getAddress(connection.getAddress()), "->", "Connected."));
 	}
 	
 	public void setSocketAddress(Connection connection, SocketAddress socketAddress) {
@@ -56,24 +53,26 @@ public class ConnectionManager {
 		LogHelper.info(String.join(" ", EquityUtil.getAddress(connection.getClientChannel().localAddress()), "->", EquityUtil.getAddress(connection.getAddress())));
 	}
 	
-	public void kickConnection(Connection connection, String reason) {
-		if (connection == null) {
-			return;
-		}
-		
-		SPacketDisconnect disconnect = new SPacketDisconnect();
-		disconnect.setReason(reason);
-		disconnect.write(connection, new Packet(Unpooled.buffer()));
-		LogHelper.info(String.join(" ", EquityUtil.getAddress(connection.getAddress()), "-> Kicked:", reason));
-	}
-	
 	public void removeConnection(Connection connection) {
 		if (getConnections() == null || connection == null) {
 			return;
 		}
 		
+		if (connection.getClientChannel() != null && connection.getClientChannel().isActive()) {
+			connection.getClientChannel().disconnect();
+		}
+		
+		if (connection.getServerChannel() != null && connection.getServerChannel().isActive()) {
+			connection.getServerChannel().disconnect();
+		}
+		
+		if (connection.hasUsername()) {
+			LogHelper.info(String.join(" ", connection.getUsername(), "->", "Disconnected."));
+		} else {
+			LogHelper.info(String.join(" ", EquityUtil.getAddress(connection.getAddress()), "->", "Disconnected."));
+		}
+		
 		getConnections().remove(connection);
-		LogHelper.info(String.join(" ", EquityUtil.getAddress(connection.getAddress()), "-> Disconnected."));
 	}
 	
 	public Connection getConnection(Channel channel, ConnectionSide connectionSide) {

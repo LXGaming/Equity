@@ -76,13 +76,13 @@ public class ProxyManager {
 	public void createServerConnection(Connection connection) {
 		try {
 			if (connection == null || connection.getClientChannel() == null || connection.getServerChannel() != null) {
-				throw new IllegalArgumentException("Required arguments are null!");
+				throw new IllegalArgumentException("Required arguments are invalid!");
 			}
 			
 			Server server = Equity.getInstance().getServerManager().getServer(connection.getProtocolVersion());
 			if (server == null) {
 				LogHelper.warn("Failed to find server handling protocol " + connection.getProtocolVersion());
-				Equity.getInstance().getConnectionManager().kickConnection(connection, "Failed to find server handling protocol " + connection.getProtocolVersion());
+				Equity.getInstance().getConnectionManager().removeConnection(connection);
 				return;
 			}
 			

@@ -18,7 +18,6 @@ package nz.co.lolnet.equity.handlers;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import nz.co.lolnet.equity.Equity;
@@ -67,23 +66,18 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
-		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
-		if (connection == null) {
+		if (ctx.channel() == null && !ctx.channel().isActive()) {
 			return;
 		}
 		
-		Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
-		if (channel != null && channel.isActive()) {
-			channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
+		if (connection != null) {
+			Equity.getInstance().getConnectionManager().removeConnection(connection);
 		}
 	}
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
-		if (ctx.channel() != null && ctx.channel().isActive()) {
-			ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-		}
-		
 		LogHelper.error("Exception caught in '" + getClass().getSimpleName() + "' - " + throwable.getMessage());
 	}
 	

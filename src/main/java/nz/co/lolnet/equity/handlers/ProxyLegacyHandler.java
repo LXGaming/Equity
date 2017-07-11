@@ -66,10 +66,6 @@ public class ProxyLegacyHandler extends ByteToMessageDecoder {
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
-		if (ctx.channel() != null && ctx.channel().isActive()) {
-			ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-		}
-		
 		LogHelper.error("Exception caught in '" + getClass().getSimpleName() + "' - " + throwable.getMessage());
 	}
 	

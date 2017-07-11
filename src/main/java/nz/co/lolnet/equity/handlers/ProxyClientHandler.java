@@ -80,17 +80,14 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 	
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
-		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
-		if (connection == null) {
+		if (ctx.channel() == null && !ctx.channel().isActive()) {
 			return;
 		}
 		
-		Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
-		if (channel != null && channel.isActive()) {
-			channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
+		if (connection != null) {
+			Equity.getInstance().getConnectionManager().removeConnection(connection);
 		}
-		
-		Equity.getInstance().getConnectionManager().removeConnection(connection);
 	}
 	
 	@Override
