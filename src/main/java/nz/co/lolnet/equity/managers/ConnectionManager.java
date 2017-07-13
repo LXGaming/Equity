@@ -47,7 +47,7 @@ public class ConnectionManager {
 		}
 		
 		getConnections().add(connection);
-		LogHelper.info(EquityUtil.getAddress(connection.getAddress()) + " -> Connected.");
+		LogHelper.info(connection.getIdentity() + " -> Connected.");
 	}
 	
 	public void addPacket(Connection connection, Packet packet) {
