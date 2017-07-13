@@ -20,7 +20,7 @@ public class Reference {
 	
 	public static final String APP_ID = "equity";
 	public static final String APP_NAME = "Equity";
-	public static final String APP_VERSION = "1.1.0";
+	public static final String APP_VERSION = "1.1.1";
 	public static final String[] AUTHORS = new String[]{"LX_Gaming"};
 	public static final String SOURCE = "https://github.com/lolnetnz/Equity/";
 	public static final String WEBSITE = "https://www.lolnet.co.nz";

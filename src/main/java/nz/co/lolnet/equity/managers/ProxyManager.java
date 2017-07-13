@@ -38,17 +38,18 @@ import nz.co.lolnet.equity.util.LogHelper;
 public class ProxyManager {
 	
 	private ServerBootstrap serverBootstrap;
+	private boolean running;
 	
 	public void startProxy() {
 		try {
 			EventLoopGroup eventLoopGroup;
 			Class<? extends ServerSocketChannel> eventLoopGroupClass;
 			if (Epoll.isAvailable() && Equity.getInstance().getConfig().isNativeTransport()) {
-				eventLoopGroup = new EpollEventLoopGroup(Equity.getInstance().getConfig().getMaxConnections(), EquityUtil.getThreadFactory("Netty Epoll Thread #%d"));
+				eventLoopGroup = new EpollEventLoopGroup(Equity.getInstance().getConfig().getMaxThreads(), EquityUtil.getThreadFactory("Netty Epoll Thread #%d"));
 				eventLoopGroupClass = EpollServerSocketChannel.class;
 				LogHelper.info("Using Epoll Transport.");
 			} else {
-				eventLoopGroup = new NioEventLoopGroup(Equity.getInstance().getConfig().getMaxConnections(), EquityUtil.getThreadFactory("Netty IO Thread #%d"));
+				eventLoopGroup = new NioEventLoopGroup(Equity.getInstance().getConfig().getMaxThreads(), EquityUtil.getThreadFactory("Netty IO Thread #%d"));
 				eventLoopGroupClass = NioServerSocketChannel.class;
 				LogHelper.info("Using NIO Transport.");
 			}
@@ -56,18 +57,20 @@ public class ProxyManager {
 			serverBootstrap = new ServerBootstrap()
 					.group(eventLoopGroup)
 					.channel(eventLoopGroupClass)
-					.option(ChannelOption.SO_BACKLOG, Equity.getInstance().getConfig().getSocketBacklog())
 					.option(ChannelOption.SO_REUSEADDR, true)
 					.childOption(ChannelOption.AUTO_READ, false)
 					.childOption(ChannelOption.TCP_NODELAY, true)
 					.childHandler(new ProxyChannelHandler(ConnectionSide.CLIENT));
 			ChannelFuture channelFuture = getServerBootstrap().bind(Equity.getInstance().getConfig().getPort()).sync();
 			LogHelper.info("Proxy listening on " + EquityUtil.getAddress(channelFuture.channel().localAddress()));
+			setRunning(true);
 			channelFuture.channel().closeFuture().sync();
 		} catch (InterruptedException | RuntimeException ex) {
 			LogHelper.error("Encountered an error processing 'startProxy' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
 			ex.printStackTrace();
 		}
+		
+		setRunning(false);
 	}
 	
 	public void createServerConnection(Connection connection) {
@@ -112,5 +115,13 @@ public class ProxyManager {
 	
 	public ServerBootstrap getServerBootstrap() {
 		return serverBootstrap;
+	}
+	
+	public boolean isRunning() {
+		return running;
+	}
+	
+	public void setRunning(boolean running) {
+		this.running = running;
 	}
 }

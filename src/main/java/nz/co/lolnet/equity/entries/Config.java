@@ -26,8 +26,7 @@ public class Config {
 	private boolean nativeTransport;
 	private boolean proxyProtocol;
 	private boolean ipForward;
-	private int maxConnections;
-	private int socketBacklog;
+	private int maxThreads;
 	private int connectTimeout;
 	private int shutdownTimeout;
 	private List<Server> servers;
@@ -38,8 +37,7 @@ public class Config {
 		setNativeTransport(true);
 		setProxyProtocol(false);
 		setIPForward(false);
-		setMaxConnections(32);
-		setSocketBacklog(64);
+		setMaxThreads(0);
 		setConnectTimeout(2500);
 		setShutdownTimeout(30000);
 		setServers(Arrays.asList(new Server()));
@@ -85,20 +83,12 @@ public class Config {
 		this.ipForward = ipForward;
 	}
 	
-	public int getMaxConnections() {
-		return maxConnections;
+	public int getMaxThreads() {
+		return maxThreads;
 	}
 	
-	private void setMaxConnections(int maxConnections) {
-		this.maxConnections = maxConnections;
-	}
-	
-	public int getSocketBacklog() {
-		return socketBacklog;
-	}
-	
-	private void setSocketBacklog(int socketBacklog) {
-		this.socketBacklog = socketBacklog;
+	private void setMaxThreads(int maxThreads) {
+		this.maxThreads = maxThreads;
 	}
 	
 	public int getConnectTimeout() {

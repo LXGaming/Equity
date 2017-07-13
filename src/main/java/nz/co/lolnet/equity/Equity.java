@@ -55,9 +55,12 @@ public class Equity {
 			LogHelper.error("Unable to load " + Reference.APP_NAME + " as the Configurations are not available!");
 		}
 		
+		System.setProperty("java.net.preferIPv4Stack", "true");
 		if (getConfig().isDebug()) {
 			ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
 			LogHelper.debug("Debugging enabled.");
+		} else {
+			ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
 		}
 		
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook());

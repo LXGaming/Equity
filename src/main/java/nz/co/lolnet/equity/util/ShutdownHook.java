@@ -16,11 +16,9 @@
 
 package nz.co.lolnet.equity.util;
 
-import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 import nz.co.lolnet.equity.Equity;
-import nz.co.lolnet.equity.entries.Connection;
 
 public class ShutdownHook extends Thread {
 	
@@ -45,16 +43,11 @@ public class ShutdownHook extends Thread {
 				throw new IllegalStateException("ConnectionManager or ProxyManager is null!");
 			}
 			
+			Equity.getInstance().getProxyManager().setRunning(false);
 			if (Equity.getInstance().getConnectionManager().getConnections() != null) {
 				LogHelper.info("Closing " + Equity.getInstance().getConnectionManager().getConnections().size() + " Connections...");
-				for (Iterator<Connection> iterator = Equity.getInstance().getConnectionManager().getConnections().iterator(); iterator.hasNext();) {
-					Connection connection = iterator.next();
-					if (connection != null && connection.getClientChannel() != null) {
-						connection.getClientChannel().close();
-						LogHelper.info("Disconnected " + connection.getIdentity() + "...");
-					}
-					
-					iterator.remove();
+				for (int index = 0; index < Equity.getInstance().getConnectionManager().getConnections().size(); index++) {
+					Equity.getInstance().getConnectionManager().removeConnection(Equity.getInstance().getConnectionManager().getConnections().get(0));
 				}
 				
 				LogHelper.info("Closed Connections.");
