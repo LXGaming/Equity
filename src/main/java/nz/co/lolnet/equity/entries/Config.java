@@ -25,6 +25,7 @@ public class Config {
 	private int port;
 	private boolean nativeTransport;
 	private boolean proxyProtocol;
+	private boolean ipForward;
 	private int maxConnections;
 	private int socketBacklog;
 	private int connectTimeout;
@@ -33,9 +34,10 @@ public class Config {
 	
 	public Config() {
 		setDebug(false);
-		setPort(25555);
+		setPort(25565);
 		setNativeTransport(true);
 		setProxyProtocol(false);
+		setIPForward(false);
 		setMaxConnections(32);
 		setSocketBacklog(64);
 		setConnectTimeout(2500);
@@ -73,6 +75,14 @@ public class Config {
 	
 	public void setProxyProtocol(boolean proxyProtocol) {
 		this.proxyProtocol = proxyProtocol;
+	}
+	
+	public boolean isIPForward() {
+		return ipForward;
+	}
+	
+	public void setIPForward(boolean ipForward) {
+		this.ipForward = ipForward;
 	}
 	
 	public int getMaxConnections() {

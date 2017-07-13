@@ -47,6 +47,7 @@ public class ServerManager {
 		if (!validServers.isEmpty()) {
 			return validServers.get(new SecureRandom().nextInt(validServers.size()));
 		}
+		
 		return null;
 	}
 	
@@ -56,6 +57,7 @@ public class ServerManager {
 		} catch (IOException | RuntimeException ex) {
 			LogHelper.warn("Server " + host + ":" + port + " is not available!");
 		}
+		
 		return false;
 	}
 	
@@ -63,6 +65,7 @@ public class ServerManager {
 		if (server != null && StringUtils.isNotBlank(server.getHost()) && server.getPort() >= 0 && server.getPort() <= 65535 && server.getProtocolVersions() != null) {
 			return true;
 		}
+		
 		return false;
 	}
 }

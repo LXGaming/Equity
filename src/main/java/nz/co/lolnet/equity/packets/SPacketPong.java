@@ -17,16 +17,15 @@
 package nz.co.lolnet.equity.packets;
 
 import nz.co.lolnet.equity.entries.AbstractPacket;
-import nz.co.lolnet.equity.entries.Connection;
-import nz.co.lolnet.equity.entries.Packet;
+import nz.co.lolnet.equity.entries.ProxyMessage;
 
 public class SPacketPong extends AbstractPacket {
 	
 	private long clientTime;
 	
 	@Override
-	public void read(Connection connection, Packet packet) {
-		setClientTime(packet.getByteBuf().readLong());
+	public void read(ProxyMessage proxyMessage) {
+		setClientTime(proxyMessage.getPacket().getByteBuf().readLong());
 	}
 	
 	public long getClientTime() {

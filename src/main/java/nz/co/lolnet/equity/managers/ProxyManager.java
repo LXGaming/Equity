@@ -16,14 +16,6 @@
 
 package nz.co.lolnet.equity.managers;
 
-import nz.co.lolnet.equity.Equity;
-import nz.co.lolnet.equity.entries.Connection;
-import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
-import nz.co.lolnet.equity.entries.Packet;
-import nz.co.lolnet.equity.entries.Server;
-import nz.co.lolnet.equity.handlers.ProxyChannelHandler;
-import nz.co.lolnet.equity.util.EquityUtil;
-import nz.co.lolnet.equity.util.LogHelper;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -35,6 +27,13 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import nz.co.lolnet.equity.Equity;
+import nz.co.lolnet.equity.entries.Connection;
+import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
+import nz.co.lolnet.equity.entries.Server;
+import nz.co.lolnet.equity.handlers.ProxyChannelHandler;
+import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.LogHelper;
 
 public class ProxyManager {
 	
@@ -63,12 +62,10 @@ public class ProxyManager {
 					.childOption(ChannelOption.TCP_NODELAY, true)
 					.childHandler(new ProxyChannelHandler(ConnectionSide.CLIENT));
 			ChannelFuture channelFuture = getServerBootstrap().bind(Equity.getInstance().getConfig().getPort()).sync();
-			
 			LogHelper.info("Proxy listening on " + EquityUtil.getAddress(channelFuture.channel().localAddress()));
-			
 			channelFuture.channel().closeFuture().sync();
 		} catch (InterruptedException | RuntimeException ex) {
-			LogHelper.error("Encountered an error processing 'loadProxy' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
+			LogHelper.error("Encountered an error processing 'startProxy' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
 			ex.printStackTrace();
 		}
 	}
@@ -98,8 +95,8 @@ public class ProxyManager {
 			channelFuture.addListener(future -> {
 				if (future.isSuccess()) {
 					connection.setServerChannel(channelFuture.channel());
-					for (Packet packet : connection.getPacketQueue()) {
-						connection.getServerChannel().writeAndFlush(packet.getByteBuf()).addListener(EquityUtil.getFutureListener(channelFuture.channel()));
+					for (Object object : connection.getPacketQueue()) {
+						connection.getServerChannel().writeAndFlush(object).addListener(EquityUtil.getFutureListener(channelFuture.channel()));
 					}
 					
 					connection.getClientChannel().read();

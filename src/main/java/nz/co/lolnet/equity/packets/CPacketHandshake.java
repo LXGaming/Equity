@@ -18,9 +18,8 @@ package nz.co.lolnet.equity.packets;
 
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.AbstractPacket;
-import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Connection.ConnectionState;
-import nz.co.lolnet.equity.entries.Packet;
+import nz.co.lolnet.equity.entries.ProxyMessage;
 
 public class CPacketHandshake extends AbstractPacket {
 	
@@ -30,20 +29,20 @@ public class CPacketHandshake extends AbstractPacket {
 	private int state;
 	
 	@Override
-	public void read(Connection connection, Packet packet) {
-		setProtocolVersion(packet.readVarInt());
-		setServerAddress(packet.readString());
-		setServerPort(packet.getByteBuf().readUnsignedShort());
-		setState(packet.readVarInt());
+	public void read(ProxyMessage proxyMessage) {
+		setProtocolVersion(proxyMessage.getPacket().readVarInt());
+		setServerAddress(proxyMessage.getPacket().readString());
+		setServerPort(proxyMessage.getPacket().getByteBuf().readUnsignedShort());
+		setState(proxyMessage.getPacket().readVarInt());
 		
-		connection.setProtocolVersion(getProtocolVersion());
+		proxyMessage.getConnection().setProtocolVersion(getProtocolVersion());
 		if (getState() == 1) {
-			connection.setConnectionState(ConnectionState.STATUS);
+			proxyMessage.getConnection().setConnectionState(ConnectionState.STATUS);
 		} else if (getState() == 2) {
-			connection.setConnectionState(ConnectionState.LOGIN);
+			proxyMessage.getConnection().setConnectionState(ConnectionState.LOGIN);
 		}
 		
-		Equity.getInstance().getProxyManager().createServerConnection(connection);
+		Equity.getInstance().getProxyManager().createServerConnection(proxyMessage.getConnection());
 	}
 	
 	public int getProtocolVersion() {

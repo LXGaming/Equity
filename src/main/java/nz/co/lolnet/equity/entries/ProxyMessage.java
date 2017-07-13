@@ -14,25 +14,27 @@
  * limitations under the License.
  */
 
-package nz.co.lolnet.equity.packets;
+package nz.co.lolnet.equity.entries;
 
-import nz.co.lolnet.equity.entries.AbstractPacket;
-import nz.co.lolnet.equity.entries.ProxyMessage;
-
-public class SPacketServerInfo extends AbstractPacket {
+public class ProxyMessage {
 	
-	private String serverInfo;
+	private final Connection connection;
+	private final Packet packet;
 	
-	@Override
-	public void read(ProxyMessage proxyMessage) {
-		setServerInfo(proxyMessage.getPacket().readString());
+	public ProxyMessage(Packet packet) {
+		this(null, packet);
 	}
 	
-	public String getServerInfo() {
-		return serverInfo;
+	public ProxyMessage(Connection connection, Packet packet) {
+		this.connection = connection;
+		this.packet = packet;
 	}
 	
-	public void setServerInfo(String serverInfo) {
-		this.serverInfo = serverInfo;
+	public Connection getConnection() {
+		return connection;
+	}
+	
+	public Packet getPacket() {
+		return packet;
 	}
 }

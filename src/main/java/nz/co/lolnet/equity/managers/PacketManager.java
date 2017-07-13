@@ -24,11 +24,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import nz.co.lolnet.equity.entries.AbstractPacket;
-import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Connection.ConnectionState;
-import nz.co.lolnet.equity.entries.Packet;
 import nz.co.lolnet.equity.entries.Packet.PacketDirection;
 import nz.co.lolnet.equity.entries.PacketData;
+import nz.co.lolnet.equity.entries.ProxyMessage;
 import nz.co.lolnet.equity.packets.CPacketHandshake;
 import nz.co.lolnet.equity.packets.CPacketLoginStart;
 import nz.co.lolnet.equity.packets.CPacketPing;
@@ -36,7 +35,6 @@ import nz.co.lolnet.equity.packets.CPacketServerInfo;
 import nz.co.lolnet.equity.packets.SPacketPong;
 import nz.co.lolnet.equity.packets.SPacketServerInfo;
 import nz.co.lolnet.equity.util.LogHelper;
-import io.netty.buffer.ByteBuf;
 
 public class PacketManager {
 	
@@ -61,35 +59,34 @@ public class PacketManager {
 				new PacketData(0, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND)));
 	}
 	
-	public void process(Connection connection, Packet packet, PacketDirection packetDirection) {
+	public void process(ProxyMessage proxyMessage, PacketDirection packetDirection) {
 		try {
-			if (connection == null || packet == null || packetDirection == null) {
+			if (proxyMessage == null || packetDirection == null || proxyMessage.getConnection() == null || proxyMessage.getPacket() == null) {
 				return;
 			}
 			
-			if (connection.getConnectionState() == null || (connection.getConnectionState().equals(ConnectionState.PLAY) && connection.isEncrypted())) {
+			if (proxyMessage.getConnection().getConnectionState() == null || proxyMessage.getConnection().getConnectionState().equals(ConnectionState.PLAY)) {
 				throw new IllegalStateException("Cannot process encrypted packets!");
 			}
 			
-			int packetId = packet.readVarInt();
-			LogHelper.debug("PacketId - " + packetId + ", Direction - " + packetDirection.name() + ", State - " + connection.getConnectionState().name());
+			proxyMessage.getPacket().getByteBuf().markReaderIndex();
+			int packetId = proxyMessage.getPacket().readVarInt();
 			for (Iterator<Entry<Class<? extends AbstractPacket>, List<PacketData>>> iterator = getRegisteredPackets().entrySet().iterator(); iterator.hasNext();) {
 				Entry<Class<? extends AbstractPacket>, List<PacketData>> entry = iterator.next();
-				PacketData targetPacketData = new PacketData(packetId, connection.getProtocolVersion(), connection.getConnectionState(), packetDirection);
+				PacketData targetPacketData = new PacketData(packetId, proxyMessage.getConnection().getProtocolVersion(), proxyMessage.getConnection().getConnectionState(), packetDirection);
 				if (entry == null || !checkPacketData(targetPacketData, entry.getValue())) {
 					continue;
 				}
 				
 				AbstractPacket abstractPacket = entry.getKey().newInstance();
-				abstractPacket.read(connection, packet);
-				resetByteBuf(packet.getByteBuf());
+				abstractPacket.read(proxyMessage);
+				proxyMessage.getPacket().getByteBuf().resetReaderIndex();
 				return;
 			}
 		} catch (ExceptionInInitializerError | IllegalAccessException | InstantiationException | RuntimeException ex) {
 			LogHelper.error("Encountered an error processing 'process' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
 			ex.printStackTrace();
 		}
-		resetByteBuf(packet.getByteBuf());
 	}
 	
 	private boolean checkPacketData(PacketData targetPacketData, List<PacketData> packetDatas) {
@@ -111,13 +108,8 @@ public class PacketManager {
 				return true;
 			}
 		}
+		
 		return false;
-	}
-	
-	private void resetByteBuf(ByteBuf byteBuf) {
-		if (byteBuf.readerIndex() != 0) {
-			byteBuf.resetReaderIndex();
-		}
 	}
 	
 	public Map<Class<? extends AbstractPacket>, List<PacketData>> getRegisteredPackets() {

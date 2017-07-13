@@ -17,12 +17,11 @@
 package nz.co.lolnet.equity.packets;
 
 import nz.co.lolnet.equity.entries.AbstractPacket;
-import nz.co.lolnet.equity.entries.Connection;
-import nz.co.lolnet.equity.entries.Packet;
+import nz.co.lolnet.equity.entries.ProxyMessage;
 
 public class CPacketServerInfo extends AbstractPacket {
 	
 	@Override
-	public void read(Connection connection, Packet packet) {
+	public void read(ProxyMessage proxyMessage) {
 	}
 }

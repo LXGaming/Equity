@@ -23,20 +23,21 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import io.netty.channel.Channel;
+import nz.co.lolnet.equity.util.EquityUtil;
 
 public class Connection {
 	
-	private final List<Packet> packetQueue;
-	private Channel clientChannel;
-	private Channel serverChannel;
+	private final List<Object> packetQueue;
 	private ConnectionState connectionState;
 	private SocketAddress socketAddress;
+	private Channel clientChannel;
+	private Channel serverChannel;
 	private int protocolVersion;
 	private String username;
-	private boolean encrypted;
 	
 	public Connection() {
-		packetQueue = new ArrayList<Packet>();
+		packetQueue = new ArrayList<Object>();
+		connectionState = ConnectionState.HANDSHAKE;
 	}
 	
 	public Channel getChannel(ConnectionSide connectionSide) {
@@ -47,27 +48,16 @@ public class Connection {
 		if (connectionSide != null && connectionSide.equals(ConnectionSide.SERVER)) {
 			return getServerChannel();
 		}
+		
 		return null;
 	}
 	
-	public boolean isChannel(Channel targetChannel, ConnectionSide connectionSide) {
-		if (targetChannel == null || targetChannel.id() == null || connectionSide == null) {
-			return false;
+	public String getIdentity() {
+		if (hasUsername()) {
+			return getUsername();
 		}
 		
-		Channel baseChannel = getChannel(connectionSide);
-		if (baseChannel == null || baseChannel.id() == null) {
-			return false;
-		}
-		
-		if (StringUtils.isAnyBlank(baseChannel.id().asLongText(), baseChannel.id().asShortText(), targetChannel.id().asLongText(), targetChannel.id().asShortText())) {
-			return false;
-		}
-		
-		if (StringUtils.equals(baseChannel.id().asLongText(), targetChannel.id().asLongText()) && StringUtils.equals(baseChannel.id().asShortText(), targetChannel.id().asShortText())) {
-			return true;
-		}
-		return false;
+		return EquityUtil.getAddress(getAddress());
 	}
 	
 	public SocketAddress getAddress() {
@@ -82,24 +72,8 @@ public class Connection {
 		return null;
 	}
 	
-	public List<Packet> getPacketQueue() {
+	public List<Object> getPacketQueue() {
 		return packetQueue;
-	}
-	
-	public Channel getClientChannel() {
-		return clientChannel;
-	}
-	
-	public void setClientChannel(Channel clientChannel) {
-		this.clientChannel = clientChannel;
-	}
-	
-	public Channel getServerChannel() {
-		return serverChannel;
-	}
-	
-	public void setServerChannel(Channel serverChannel) {
-		this.serverChannel = serverChannel;
 	}
 	
 	public ConnectionState getConnectionState() {
@@ -116,6 +90,30 @@ public class Connection {
 	
 	public void setSocketAddress(SocketAddress socketAddress) {
 		this.socketAddress = socketAddress;
+	}
+	
+	public Channel getClientChannel() {
+		return clientChannel;
+	}
+	
+	public void setClientChannel(Channel clientChannel) {
+		this.clientChannel = clientChannel;
+		
+		if (getClientChannel() != null) {
+			getClientChannel().attr(EquityUtil.getAttributeKey()).set(this);
+		}
+	}
+	
+	public Channel getServerChannel() {
+		return serverChannel;
+	}
+	
+	public void setServerChannel(Channel serverChannel) {
+		this.serverChannel = serverChannel;
+		
+		if (getServerChannel() != null) {
+			getServerChannel().attr(EquityUtil.getAttributeKey()).set(this);
+		}
 	}
 	
 	public int getProtocolVersion() {
@@ -142,27 +140,19 @@ public class Connection {
 		this.username = username;
 	}
 	
-	public boolean isEncrypted() {
-		return encrypted;
-	}
-	
-	public void setEncrypted(boolean encrypted) {
-		this.encrypted = encrypted;
-	}
-	
 	public enum ConnectionState {
 		
 		HANDSHAKE, STATUS, LOGIN, PLAY;
 		
 		@Override
 		public String toString() {
-			return name().toUpperCase();
+			return StringUtils.capitalize(name().toLowerCase());
 		}
 	}
 	
 	public enum ConnectionSide {
 		
-		CLIENT, SERVER;
+		CLIENT, SERVER, UNKNOWN;
 		
 		public ConnectionSide getChannelSide() {
 			if (equals(ConnectionSide.CLIENT)) {
@@ -173,12 +163,12 @@ public class Connection {
 				return ConnectionSide.CLIENT;
 			}
 			
-			return null;
+			return ConnectionSide.UNKNOWN;
 		}
 		
 		@Override
 		public String toString() {
-			return name().toUpperCase();
+			return StringUtils.capitalize(name().toLowerCase());
 		}
 	}
 }

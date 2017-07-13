@@ -21,9 +21,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import io.netty.channel.Channel;
+import io.netty.buffer.ByteBuf;
 import nz.co.lolnet.equity.entries.Connection;
-import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
+import nz.co.lolnet.equity.entries.Packet;
+import nz.co.lolnet.equity.entries.ProxyMessage;
 import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.LogHelper;
 
@@ -41,7 +42,21 @@ public class ConnectionManager {
 		}
 		
 		getConnections().add(connection);
-		LogHelper.info(String.join(" ", EquityUtil.getAddress(connection.getAddress()), "->", "Connected."));
+		LogHelper.info(EquityUtil.getAddress(connection.getAddress()) + " -> Connected.");
+	}
+	
+	public void addPacket(Connection connection, Packet packet) {
+		if (connection == null || packet == null || connection.getPacketQueue() == null) {
+			return;
+		}
+		
+		if (connection.getPacketQueue().size() > 10) {
+			LogHelper.warn(connection.getIdentity() + " -> Queued over 10 packets, Assuming malicious client!");
+			removeConnection(connection);
+			return;
+		}
+		
+		connection.getPacketQueue().add(packet);
 	}
 	
 	public void setSocketAddress(Connection connection, SocketAddress socketAddress) {
@@ -50,11 +65,11 @@ public class ConnectionManager {
 		}
 		
 		connection.setSocketAddress(socketAddress);
-		LogHelper.info(String.join(" ", EquityUtil.getAddress(connection.getClientChannel().localAddress()), "->", EquityUtil.getAddress(connection.getAddress())));
+		LogHelper.info(EquityUtil.getAddress(connection.getClientChannel().localAddress()) + " -> " + EquityUtil.getAddress(connection.getAddress()));
 	}
 	
 	public void removeConnection(Connection connection) {
-		if (getConnections() == null || connection == null) {
+		if (getConnections() == null || connection == null || !getConnections().remove(connection)) {
 			return;
 		}
 		
@@ -66,23 +81,21 @@ public class ConnectionManager {
 			connection.getServerChannel().disconnect();
 		}
 		
-		if (connection.hasUsername()) {
-			LogHelper.info(String.join(" ", connection.getUsername(), "->", "Disconnected."));
-		} else {
-			LogHelper.info(String.join(" ", EquityUtil.getAddress(connection.getAddress()), "->", "Disconnected."));
-		}
-		
-		getConnections().remove(connection);
-	}
-	
-	public Connection getConnection(Channel channel, ConnectionSide connectionSide) {
-		for (Iterator<Connection> iterator = getConnections().iterator(); iterator.hasNext();) {
-			Connection connection = iterator.next();
-			if (connection != null && connection.isChannel(channel, connectionSide)) {
-				return connection;
+		if (connection.getPacketQueue() != null && !connection.getPacketQueue().isEmpty()) {
+			for (Iterator<Object> iterator = connection.getPacketQueue().iterator(); iterator.hasNext();) {
+				Object object = iterator.next();
+				iterator.remove();
+				if (object instanceof ByteBuf) {
+					EquityUtil.safeRelease(((ByteBuf) object));
+				}
+				
+				if (object instanceof ProxyMessage) {
+					EquityUtil.safeRelease(((ProxyMessage) object).getPacket().getByteBuf());
+				}
 			}
 		}
-		return null;
+		
+		LogHelper.info(connection.getIdentity() + " -> Disconnected.");
 	}
 	
 	public List<Connection> getConnections() {

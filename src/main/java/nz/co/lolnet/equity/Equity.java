@@ -16,6 +16,7 @@
 
 package nz.co.lolnet.equity;
 
+import io.netty.util.ResourceLeakDetector;
 import nz.co.lolnet.equity.configuration.Configuration;
 import nz.co.lolnet.equity.entries.Config;
 import nz.co.lolnet.equity.managers.ConnectionManager;
@@ -52,6 +53,11 @@ public class Equity {
 		LogHelper.info("Initializing...");
 		if (getConfiguration() == null || !getConfiguration().loadConfiguration() || !getConfiguration().saveConfiguration()) {
 			LogHelper.error("Unable to load " + Reference.APP_NAME + " as the Configurations are not available!");
+		}
+		
+		if (getConfig().isDebug()) {
+			ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
+			LogHelper.debug("Debugging enabled.");
 		}
 		
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook());

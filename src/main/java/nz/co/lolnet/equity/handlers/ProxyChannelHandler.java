@@ -18,7 +18,7 @@ package nz.co.lolnet.equity.handlers;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
-import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
+import io.netty.handler.codec.haproxy.ProxyHAProxyMessageDecoder;
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
 
@@ -37,7 +37,7 @@ public class ProxyChannelHandler extends ChannelInitializer<Channel> {
 		if (getConnectionSide() != null && getConnectionSide().equals(ConnectionSide.CLIENT)) {
 			channel.pipeline().addFirst("ProxyLegacy", new ProxyLegacyHandler());
 			if (Equity.getInstance().getConfig().isProxyProtocol()) {
-				channel.pipeline().addFirst("HAProxyMessageDecoder", new HAProxyMessageDecoder());
+				channel.pipeline().addFirst("ProxyHAProxyMessageDecoder", new ProxyHAProxyMessageDecoder());
 			}
 			
 			channel.pipeline().addLast("ProxyClient", new ProxyClientHandler());

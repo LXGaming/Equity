@@ -29,9 +29,15 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import nz.co.lolnet.equity.entries.Connection;
+import nz.co.lolnet.equity.entries.Packet;
 
 public class EquityUtil {
 	
@@ -49,7 +55,6 @@ public class EquityUtil {
 		lines.add("  Authors: " + String.join(", ", Reference.AUTHORS));
 		lines.add("  Source: " + Reference.SOURCE);
 		lines.add("  Website: " + Reference.WEBSITE);
-		
 		int length = Collections.max(lines, Comparator.comparingInt(String::length)).length();
 		lines.add(0, String.join("", Collections.nCopies(length, "-")));
 		lines.add(String.join("", Collections.nCopies(length, "-")));
@@ -66,6 +71,38 @@ public class EquityUtil {
 		};
 	}
 	
+	public static Packet getPacket(ByteBufAllocator byteBufAllocator, ByteBuf byteBuf, int length) {
+		Packet packet = new Packet(Unpooled.EMPTY_BUFFER);
+		if (byteBuf.hasMemoryAddress()) {
+			packet = new Packet(byteBuf.slice(byteBuf.readerIndex(), length).retain());
+			byteBuf.skipBytes(length);
+		} else {
+			ByteBuf directBuffer = byteBufAllocator.directBuffer(length);
+			byteBuf.readBytes(directBuffer);
+			packet = new Packet(directBuffer);
+		}
+		
+		return packet;
+	}
+	
+	public static boolean safeRelease(ByteBuf byteBuf) {
+		try {
+			if (byteBuf == null) {
+				throw new IllegalArgumentException("Supplied arguments are null!");
+			}
+			
+			if (byteBuf.refCnt() > 0) {
+				byteBuf.release(byteBuf.refCnt());
+			}
+			
+			return true;
+		} catch (RuntimeException ex) {
+			LogHelper.error("Encountered an error processing 'safeRelease' - " + ex.getMessage());
+		}
+		
+		return false;
+	}
+	
 	public static Gson getGsonWithTypeAdapter(Object object) {
 		GsonBuilder gsonBuilder = new GsonBuilder();
 		if (object != null) {
@@ -73,6 +110,10 @@ public class EquityUtil {
 		}
 		
 		return gsonBuilder.setPrettyPrinting().create();
+	}
+	
+	public static AttributeKey<Connection> getAttributeKey() {
+		return AttributeKey.valueOf("CONNECTION");
 	}
 	
 	public static String getAddress(SocketAddress socketAddress) {
@@ -84,6 +125,7 @@ public class EquityUtil {
 			InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
 			return inetSocketAddress.getHostString();
 		}
+		
 		return "UNKNOWN";
 	}
 	
@@ -92,6 +134,7 @@ public class EquityUtil {
 			InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
 			return inetSocketAddress.getPort();
 		}
+		
 		return 0;
 	}
 }

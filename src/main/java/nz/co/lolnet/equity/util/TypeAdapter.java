@@ -37,6 +37,7 @@ public class TypeAdapter implements InstanceCreator<Object> {
 		if (getObject().getClass().getName().equals(type.getTypeName())) {
 			return getObject();
 		}
+		
 		return null;
 	}
 	

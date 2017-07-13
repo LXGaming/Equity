@@ -20,11 +20,11 @@ import nz.co.lolnet.equity.util.EquityUtil;
 
 public abstract class AbstractPacket {
 	
-	public void read(Connection connection, Packet packet) {
+	public void read(ProxyMessage proxyMessage) {
 		throw new UnsupportedOperationException("Packet must implement read method!");
 	}
 	
-	public void write(Connection connection, Packet packet) {
+	public void write(ProxyMessage proxyMessage) {
 		throw new UnsupportedOperationException("Packet must implement write method!");
 	}
 	

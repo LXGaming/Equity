@@ -23,9 +23,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
+import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.LogHelper;
 
 public class ProxyLegacyHandler extends ByteToMessageDecoder {
@@ -38,9 +38,9 @@ public class ProxyLegacyHandler extends ByteToMessageDecoder {
 	
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
+		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
 		if (connection == null || connection.getConnectionState() == null) {
-			throw new IllegalStateException(getConnectionSide() + " Connection error!");
+			throw new IllegalStateException(getConnectionSide().toString() + " Connection error!");
 		}
 		
 		if (!in.isReadable()) {

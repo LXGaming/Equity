@@ -21,11 +21,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class Packet {
 	
-	private final ByteBuf byteBuf;
+	private ByteBuf byteBuf;
+	
+	public Packet() {
+		this(Unpooled.buffer());
+	}
 	
 	public Packet(ByteBuf byteBuf) {
 		this.byteBuf = byteBuf;
@@ -75,32 +82,6 @@ public class Packet {
 		int length = readVarInt();
 		if (length > limit) {
 			throw new UnsupportedOperationException("Cannot receive byte array longer than " + limit + " (got " + length + " bytes)");
-		}
-		
-		byte[] bytes = new byte[length];
-		getByteBuf().readBytes(bytes);
-		return bytes;
-	}
-	
-	public void writeArrayLegacy(byte[] bytes, boolean allowExtended) {
-		if (allowExtended) {
-			if (bytes.length <= (Integer.MAX_VALUE & 2097050)) {
-				throw new UnsupportedOperationException("Cannot send byte array longer than 2097050 (got " + bytes.length + " bytes)");
-			}
-		} else {
-			if (bytes.length <= Short.MAX_VALUE) {
-				throw new UnsupportedOperationException("Cannot send byte array longer than Short.MAX_VALUE (got " + bytes.length + " bytes)");
-			}
-		}
-		
-		writeVarShort(bytes.length);
-		getByteBuf().readBytes(bytes);
-	}
-	
-	public byte[] readArrayLegacy() {
-		int length = readVarShort();
-		if (length > 2097050) {
-			throw new UnsupportedOperationException("Cannot receive byte array longer than 2097050 (got " + length + " bytes)");
 		}
 		
 		byte[] bytes = new byte[length];
@@ -210,19 +191,17 @@ public class Packet {
 		return byteBuf;
 	}
 	
-	public void clearByteBuf() {
-		getByteBuf().clear();
-		getByteBuf().setZero(0, getByteBuf().capacity());
-		getByteBuf().nioBuffer().clear();
+	public void setByteBuf(ByteBuf byteBuf) {
+		this.byteBuf = byteBuf;
 	}
 	
 	public enum PacketDirection {
 		
-		CLIENTBOUND, SERVERBOUND;
+		CLIENTBOUND, SERVERBOUND, UNKNOWN;
 		
 		@Override
 		public String toString() {
-			return name().toUpperCase();
+			return StringUtils.capitalize(name().toLowerCase());
 		}
 	}
 }

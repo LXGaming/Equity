@@ -23,8 +23,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
-import nz.co.lolnet.equity.entries.Packet;
 import nz.co.lolnet.equity.entries.Packet.PacketDirection;
+import nz.co.lolnet.equity.entries.ProxyMessage;
 import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.LogHelper;
 
@@ -44,34 +44,30 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if (msg == null || !(msg instanceof Packet)) {
-			throw new IllegalArgumentException("Illegal message received!");
-		}
-		
-		Packet packet = (Packet) msg;
-		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
+		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
 		if (connection == null || connection.getConnectionState() == null) {
-			throw new IllegalStateException(getConnectionSide() + " Connection error!");
+			throw new IllegalStateException(getConnectionSide().toString() + " Connection error!");
 		}
 		
-		Equity.getInstance().getPacketManager().process(connection, packet, PacketDirection.CLIENTBOUND);
-		
-		Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
-		if (channel == null) {
-			throw new IllegalStateException(getConnectionSide().getChannelSide() + " Channel does not exist!");
+		if (msg instanceof ProxyMessage) {
+			ProxyMessage proxyMessage = (ProxyMessage) msg;
+			Equity.getInstance().getPacketManager().process(proxyMessage, PacketDirection.CLIENTBOUND);
+			Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
+			if (channel == null) {
+				throw new IllegalStateException(getConnectionSide().getChannelSide() + " Channel does not exist!");
+			}
+			
+			channel.writeAndFlush(new ProxyMessage(proxyMessage.getPacket())).addListener(EquityUtil.getFutureListener(ctx.channel()));
+			return;
 		}
 		
-		channel.writeAndFlush(packet.getByteBuf()).addListener(EquityUtil.getFutureListener(ctx.channel()));
+		throw new UnsupportedOperationException("Unsupported message received!");
 	}
 	
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
-		if (ctx.channel() == null && !ctx.channel().isActive()) {
-			return;
-		}
-		
-		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
-		if (connection != null) {
+		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
+		if (Equity.getInstance() != null && Equity.getInstance().getConnectionManager() != null && connection != null) {
 			Equity.getInstance().getConnectionManager().removeConnection(connection);
 		}
 	}
@@ -79,6 +75,9 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
 		LogHelper.error("Exception caught in '" + getClass().getSimpleName() + "' - " + throwable.getMessage());
+		if (Equity.getInstance() != null && Equity.getInstance().getConfig() != null && Equity.getInstance().getConfig().isDebug()) {
+			throwable.printStackTrace();
+		}
 	}
 	
 	public ConnectionSide getConnectionSide() {

@@ -16,15 +16,14 @@
 
 package nz.co.lolnet.equity.handlers;
 
-import nz.co.lolnet.equity.Equity;
-import nz.co.lolnet.equity.entries.Connection;
-import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
-import nz.co.lolnet.equity.entries.Packet;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
+import nz.co.lolnet.equity.entries.Packet;
+import nz.co.lolnet.equity.entries.ProxyMessage;
 
-public class ProxyEncodingHandler extends MessageToByteEncoder<ByteBuf> {
+public class ProxyEncodingHandler extends MessageToByteEncoder<ProxyMessage> {
 	
 	private final ConnectionSide connectionSide;
 	
@@ -33,19 +32,9 @@ public class ProxyEncodingHandler extends MessageToByteEncoder<ByteBuf> {
 	}
 	
 	@Override
-	protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
+	protected void encode(ChannelHandlerContext ctx, ProxyMessage msg, ByteBuf out) throws Exception {
 		Packet packet = new Packet(out);
-		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
-		if (connection == null || connection.getConnectionState() == null) {
-			throw new IllegalStateException(getConnectionSide() + " Connection error!");
-		}
-		
-		if (connection.isEncrypted()) {
-			packet.getByteBuf().writeBytes(msg);
-			return;
-		}
-		
-		int length = msg.readableBytes();
+		int length = msg.getPacket().getByteBuf().readableBytes();
 		int varIntSize = packet.getVarIntSize(length);
 		if (varIntSize > 3) {
 			throw new IllegalArgumentException("Unable to fit " + length + " into " + 3);
@@ -53,7 +42,8 @@ public class ProxyEncodingHandler extends MessageToByteEncoder<ByteBuf> {
 		
 		packet.getByteBuf().ensureWritable(varIntSize + length);
 		packet.writeVarInt(length);
-		packet.getByteBuf().writeBytes(msg);
+		packet.getByteBuf().writeBytes(msg.getPacket().getByteBuf());
+		msg.getPacket().getByteBuf().release();
 	}
 	
 	public ConnectionSide getConnectionSide() {

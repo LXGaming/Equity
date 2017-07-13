@@ -24,11 +24,12 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.CorruptedFrameException;
-import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
 import nz.co.lolnet.equity.entries.Connection.ConnectionState;
 import nz.co.lolnet.equity.entries.Packet;
+import nz.co.lolnet.equity.entries.ProxyMessage;
+import nz.co.lolnet.equity.util.EquityUtil;
 
 public class ProxyDecodingHandler extends ByteToMessageDecoder {
 	
@@ -40,17 +41,13 @@ public class ProxyDecodingHandler extends ByteToMessageDecoder {
 	
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
+		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
 		if (connection == null || connection.getConnectionState() == null) {
-			throw new IllegalStateException(getConnectionSide() + " Connection error!");
-		}
-		
-		if (connection.getConnectionState().equals(ConnectionState.PLAY) && !connection.isEncrypted()) {
-			connection.setEncrypted(true);
+			throw new IllegalStateException(getConnectionSide().toString() + " Connection error!");
 		}
 		
 		Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
-		if (channel != null && connection.isEncrypted()) {
+		if (channel != null && connection.getConnectionState().equals(ConnectionState.PLAY)) {
 			channel.writeAndFlush(getPacket(ctx, in, in.readableBytes()).getByteBuf());
 			return;
 		}
@@ -75,7 +72,7 @@ public class ProxyDecodingHandler extends ByteToMessageDecoder {
 					return;
 				}
 				
-				out.add(getPacket(ctx, in, length));
+				out.add(new ProxyMessage(connection, getPacket(ctx, in, length)));
 				return;
 			}
 		}

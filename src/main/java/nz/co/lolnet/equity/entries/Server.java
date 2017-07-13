@@ -27,7 +27,7 @@ public class Server {
 	
 	public Server() {
 		setHost("127.0.0.1");
-		setPort(25565);
+		setPort(25577);
 		setProtocolVersions(Arrays.asList(335, 316, 315, 210, 110, 109, 108, 107, 47));
 	}
 	

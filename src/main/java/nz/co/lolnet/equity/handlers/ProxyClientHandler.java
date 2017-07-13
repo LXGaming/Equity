@@ -20,16 +20,14 @@ import java.net.InetSocketAddress;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
-import nz.co.lolnet.equity.entries.Connection.ConnectionState;
-import nz.co.lolnet.equity.entries.Packet;
 import nz.co.lolnet.equity.entries.Packet.PacketDirection;
+import nz.co.lolnet.equity.entries.ProxyMessage;
 import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.LogHelper;
 
@@ -45,7 +43,6 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 	public void channelActive(ChannelHandlerContext ctx) {
 		Connection connection = new Connection();
 		connection.setClientChannel(ctx.channel());
-		connection.setConnectionState(ConnectionState.HANDSHAKE);
 		Equity.getInstance().getConnectionManager().addConnection(connection);
 		ctx.read();
 		ctx.write(Unpooled.EMPTY_BUFFER);
@@ -53,9 +50,9 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 	
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
+		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
 		if (connection == null || connection.getConnectionState() == null) {
-			throw new IllegalStateException(getConnectionSide() + " Connection error!");
+			throw new IllegalStateException(getConnectionSide().toString() + " Connection error!");
 		}
 		
 		if (msg instanceof HAProxyMessage && Equity.getInstance().getConfig().isProxyProtocol()) {
@@ -64,39 +61,36 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 			return;
 		}
 		
-		if (msg instanceof Packet) {
-			Packet packet = (Packet) msg;
-			Equity.getInstance().getPacketManager().process(connection, packet, PacketDirection.SERVERBOUND);
-			
+		if (msg instanceof ProxyMessage) {
+			ProxyMessage proxyMessage = (ProxyMessage) msg;
+			Equity.getInstance().getPacketManager().process(proxyMessage, PacketDirection.SERVERBOUND);
 			Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
 			if (channel == null) {
-				connection.getPacketQueue().add(packet);
+				connection.getPacketQueue().add(proxyMessage);
 				return;
 			}
 			
-			channel.writeAndFlush(packet.getByteBuf()).addListener(EquityUtil.getFutureListener(ctx.channel()));
+			channel.writeAndFlush(new ProxyMessage(proxyMessage.getPacket())).addListener(EquityUtil.getFutureListener(ctx.channel()));
+			return;
 		}
+		
+		throw new UnsupportedOperationException("Unsupported message received!");
 	}
 	
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
-		if (ctx.channel() == null && !ctx.channel().isActive()) {
-			return;
-		}
-		
-		Connection connection = Equity.getInstance().getConnectionManager().getConnection(ctx.channel(), getConnectionSide());
-		if (connection != null) {
+		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
+		if (Equity.getInstance() != null && Equity.getInstance().getConnectionManager() != null && connection != null) {
 			Equity.getInstance().getConnectionManager().removeConnection(connection);
 		}
 	}
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
-		if (ctx.channel() != null && ctx.channel().isActive()) {
-			ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-		}
-		
 		LogHelper.error("Exception caught in '" + getClass().getSimpleName() + "' - " + throwable.getMessage());
+		if (Equity.getInstance() != null && Equity.getInstance().getConfig() != null && Equity.getInstance().getConfig().isDebug()) {
+			throwable.printStackTrace();
+		}
 	}
 	
 	public ConnectionSide getConnectionSide() {
