@@ -26,12 +26,14 @@ public class Server {
 	private String name;
 	private String host;
 	private int port;
+	private int timeout;
 	private List<Integer> protocolVersions;
 	
 	public Server() {
 		setName("LocalHost");
 		setHost("127.0.0.1");
 		setPort(25577);
+		setTimeout(2000);
 		setProtocolVersions(Arrays.asList(335, 316, 315, 210, 110, 109, 108, 107, 47));
 	}
 	
@@ -65,6 +67,14 @@ public class Server {
 	
 	private void setPort(int port) {
 		this.port = port;
+	}
+	
+	public int getTimeout() {
+		return timeout;
+	}
+	
+	private void setTimeout(int timeout) {
+		this.timeout = timeout;
 	}
 	
 	public List<Integer> getProtocolVersions() {

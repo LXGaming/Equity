@@ -53,7 +53,8 @@ public class ServerManager {
 	
 	private boolean isAvailable(Server server) {
 		InetSocketAddress socketAddress = new InetSocketAddress(server.getHost(), server.getPort());
-		try (Socket socket = new Socket(socketAddress.getAddress().getHostAddress(), socketAddress.getPort())) {
+		try (Socket socket = new Socket()) {
+			socket.connect(socketAddress, server.getTimeout());
 			return true;
 		} catch (IOException | RuntimeException ex) {
 			Equity.getInstance().getLogger().warn("Server {} is not available!", server.getIdentity());
