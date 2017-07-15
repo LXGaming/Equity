@@ -33,12 +33,10 @@ import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
 import nz.co.lolnet.equity.entries.Server;
 import nz.co.lolnet.equity.handlers.ProxyChannelHandler;
 import nz.co.lolnet.equity.util.EquityUtil;
-import nz.co.lolnet.equity.util.LogHelper;
 
 public class ProxyManager {
 	
 	private ServerBootstrap serverBootstrap;
-	private boolean running;
 	
 	public void startProxy() {
 		try {
@@ -47,11 +45,11 @@ public class ProxyManager {
 			if (Epoll.isAvailable() && Equity.getInstance().getConfig().isNativeTransport()) {
 				eventLoopGroup = new EpollEventLoopGroup(Equity.getInstance().getConfig().getMaxThreads(), EquityUtil.getThreadFactory("Netty Epoll Thread #%d"));
 				eventLoopGroupClass = EpollServerSocketChannel.class;
-				LogHelper.info("Using Epoll Transport.");
+				Equity.getInstance().getLogger().info("Using Epoll Transport.");
 			} else {
 				eventLoopGroup = new NioEventLoopGroup(Equity.getInstance().getConfig().getMaxThreads(), EquityUtil.getThreadFactory("Netty IO Thread #%d"));
 				eventLoopGroupClass = NioServerSocketChannel.class;
-				LogHelper.info("Using NIO Transport.");
+				Equity.getInstance().getLogger().info("Using NIO Transport.");
 			}
 			
 			serverBootstrap = new ServerBootstrap()
@@ -62,15 +60,12 @@ public class ProxyManager {
 					.childOption(ChannelOption.TCP_NODELAY, true)
 					.childHandler(new ProxyChannelHandler(ConnectionSide.CLIENT));
 			ChannelFuture channelFuture = getServerBootstrap().bind(Equity.getInstance().getConfig().getPort()).sync();
-			LogHelper.info("Proxy listening on " + EquityUtil.getAddress(channelFuture.channel().localAddress()));
-			setRunning(true);
+			Equity.getInstance().getLogger().info("Proxy listening on {}", EquityUtil.getAddress(channelFuture.channel().localAddress()));
+			Equity.getInstance().setRunning(true);
 			channelFuture.channel().closeFuture().sync();
 		} catch (InterruptedException | RuntimeException ex) {
-			LogHelper.error("Encountered an error processing 'startProxy' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
-			ex.printStackTrace();
+			Equity.getInstance().getLogger().error("Encountered an error processing {}::startProxy", getClass().getSimpleName(), ex);
 		}
-		
-		setRunning(false);
 	}
 	
 	public void createServerConnection(Connection connection) {
@@ -81,11 +76,12 @@ public class ProxyManager {
 			
 			Server server = Equity.getInstance().getServerManager().getServer(connection.getProtocolVersion());
 			if (server == null) {
-				LogHelper.warn("Failed to find server handling protocol " + connection.getProtocolVersion());
+				Equity.getInstance().getLogger().warn("Failed to find server handling protocol {}", connection.getProtocolVersion());
 				Equity.getInstance().getConnectionManager().removeConnection(connection);
 				return;
 			}
 			
+			Equity.getInstance().getLogger().info("{} -> SERVER {}", connection.getIdentity(), server.getIdentity());
 			Bootstrap bootstrap = new Bootstrap()
 					.group(connection.getClientChannel().eventLoop())
 					.channel(connection.getClientChannel().getClass())
@@ -108,20 +104,11 @@ public class ProxyManager {
 				}
 			});
 		} catch (RuntimeException ex) {
-			LogHelper.error("Encountered an error processing 'createServerConnection' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
-			ex.printStackTrace();
+			Equity.getInstance().getLogger().error("Encountered an error processing {}::createServerConnection", getClass().getSimpleName(), ex);
 		}
 	}
 	
 	public ServerBootstrap getServerBootstrap() {
 		return serverBootstrap;
-	}
-	
-	public boolean isRunning() {
-		return running;
-	}
-	
-	public void setRunning(boolean running) {
-		this.running = running;
 	}
 }

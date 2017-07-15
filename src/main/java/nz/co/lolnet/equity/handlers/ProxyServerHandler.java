@@ -26,7 +26,6 @@ import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
 import nz.co.lolnet.equity.entries.Packet.PacketDirection;
 import nz.co.lolnet.equity.entries.ProxyMessage;
 import nz.co.lolnet.equity.util.EquityUtil;
-import nz.co.lolnet.equity.util.LogHelper;
 
 public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	
@@ -74,10 +73,12 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
-		LogHelper.error("Exception caught in '" + getClass().getSimpleName() + "' - " + throwable.getMessage());
 		if (Equity.getInstance() != null && Equity.getInstance().getConfig() != null && Equity.getInstance().getConfig().isDebug()) {
-			throwable.printStackTrace();
+			Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
+			return;
 		}
+		
+		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName());
 	}
 	
 	public ConnectionSide getConnectionSide() {

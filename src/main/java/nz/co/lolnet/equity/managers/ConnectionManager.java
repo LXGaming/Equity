@@ -27,7 +27,6 @@ import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Packet;
 import nz.co.lolnet.equity.entries.ProxyMessage;
 import nz.co.lolnet.equity.util.EquityUtil;
-import nz.co.lolnet.equity.util.LogHelper;
 
 public class ConnectionManager {
 	
@@ -42,12 +41,12 @@ public class ConnectionManager {
 			return;
 		}
 		
-		if (Equity.getInstance().getProxyManager() == null || !Equity.getInstance().getProxyManager().isRunning()) {
+		if (Equity.getInstance().getProxyManager() == null || !Equity.getInstance().isRunning()) {
 			return;
 		}
 		
 		getConnections().add(connection);
-		LogHelper.info(connection.getIdentity() + " -> Connected.");
+		Equity.getInstance().getLogger().info("{} -> Connected", connection.getIdentity());
 	}
 	
 	public void addPacket(Connection connection, Packet packet) {
@@ -56,7 +55,7 @@ public class ConnectionManager {
 		}
 		
 		if (connection.getPacketQueue().size() > 10) {
-			LogHelper.warn(connection.getIdentity() + " -> Queued over 10 packets, Assuming malicious client!");
+			Equity.getInstance().getLogger().warn("{} -> Queued over 10 packets, Assuming malicious client!", connection.getIdentity());
 			removeConnection(connection);
 			return;
 		}
@@ -70,7 +69,7 @@ public class ConnectionManager {
 		}
 		
 		connection.setSocketAddress(socketAddress);
-		LogHelper.info(EquityUtil.getAddress(connection.getClientChannel().localAddress()) + " -> " + EquityUtil.getAddress(connection.getAddress()));
+		Equity.getInstance().getLogger().info("{} -> PROXY {}", EquityUtil.getAddress(connection.getClientChannel().localAddress()), EquityUtil.getAddress(connection.getAddress()));
 	}
 	
 	public void removeConnection(Connection connection) {
@@ -100,7 +99,7 @@ public class ConnectionManager {
 			}
 		}
 		
-		LogHelper.info(connection.getIdentity() + " -> Disconnected.");
+		Equity.getInstance().getLogger().info("{} -> Disconnected", connection.getIdentity());
 	}
 	
 	public List<Connection> getConnections() {

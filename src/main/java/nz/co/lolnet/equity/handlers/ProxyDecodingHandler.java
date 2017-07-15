@@ -81,17 +81,15 @@ public class ProxyDecodingHandler extends ByteToMessageDecoder {
 	}
 	
 	private Packet getPacket(ChannelHandlerContext ctx, ByteBuf in, int length) {
-		Packet packet = new Packet(Unpooled.EMPTY_BUFFER);
 		if (in.hasMemoryAddress()) {
-			packet = new Packet(in.slice(in.readerIndex(), length).retain());
+			Packet packet = new Packet(in.slice(in.readerIndex(), length).retain());
 			in.skipBytes(length);
-		} else {
-			ByteBuf byteBuf = ctx.alloc().directBuffer(length);
-			in.readBytes(byteBuf);
-			packet = new Packet(byteBuf);
+			return packet;
 		}
 		
-		return packet;
+		ByteBuf byteBuf = ctx.alloc().directBuffer(length);
+		in.readBytes(byteBuf);
+		return new Packet(byteBuf);
 	}
 	
 	public ConnectionSide getConnectionSide() {

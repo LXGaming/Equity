@@ -18,6 +18,8 @@ package nz.co.lolnet.equity.util;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+
 import nz.co.lolnet.equity.Equity;
 
 public class ShutdownHook extends Thread {
@@ -26,43 +28,69 @@ public class ShutdownHook extends Thread {
 	public void run() {
 		Thread.currentThread().setName(Reference.APP_NAME + " Shutdown");
 		process();
+		LogManager.shutdown();
 	}
 	
 	private void process() {
-		LogHelper.info("Shutting down...");
-		if (Equity.getInstance() != null) {
-			shutdownProxy();
+		Equity.getInstance().getLogger().info("Shutting down...");
+		if (Equity.getInstance() == null) {
+			Equity.getInstance().getLogger().info("Cannot perform shutdown tasks as {} is null!", Reference.APP_NAME);
+			return;
 		}
 		
-		LogHelper.info("Shutdown complete.");
+		Equity.getInstance().setRunning(false);
+		shutdownConnections();
+		shutdownProxy();
+		Equity.getInstance().getLogger().info("Shutdown complete.");   
+	}
+	
+	private void shutdownConnections() {
+		try {
+			Equity.getInstance().getLogger().info("Shutting down Connections...");
+			if (Equity.getInstance().getConnectionManager() == null) {
+				throw new IllegalStateException("ConnectionManager is null!");
+			}
+			
+			if (Equity.getInstance().getConnectionManager().getConnections() == null) {
+				throw new IllegalStateException("Connections is null!");
+			}
+			
+			Equity.getInstance().getLogger().info("Closing {} Connections...", Equity.getInstance().getConnectionManager().getConnections().size());
+			
+			int failed = 0;
+			while (Equity.getInstance().getConnectionManager().getConnections().size() > failed) {
+				int connectionSize = Equity.getInstance().getConnectionManager().getConnections().size();
+				Equity.getInstance().getConnectionManager().removeConnection(Equity.getInstance().getConnectionManager().getConnections().get(failed));
+				if (Equity.getInstance().getConnectionManager().getConnections().size() != connectionSize - 1) {
+					failed++;
+				}
+			}
+			
+			if (failed > 0) {
+				Equity.getInstance().getLogger().warn("Failed to remove {} Connections", failed);
+			}
+			
+			Equity.getInstance().getLogger().info("Closed Connections.");
+		} catch (RuntimeException ex) {
+			Equity.getInstance().getLogger().error("Encountered an error processing {}::shutdownConnections", getClass().getSimpleName(), ex);
+		}
 	}
 	
 	private void shutdownProxy() {
 		try {
-			if (Equity.getInstance().getConnectionManager() == null || Equity.getInstance().getProxyManager() == null) {
-				throw new IllegalStateException("ConnectionManager or ProxyManager is null!");
-			}
-			
-			Equity.getInstance().getProxyManager().setRunning(false);
-			if (Equity.getInstance().getConnectionManager().getConnections() != null) {
-				LogHelper.info("Closing " + Equity.getInstance().getConnectionManager().getConnections().size() + " Connections...");
-				for (int index = 0; index < Equity.getInstance().getConnectionManager().getConnections().size(); index++) {
-					Equity.getInstance().getConnectionManager().removeConnection(Equity.getInstance().getConnectionManager().getConnections().get(0));
-				}
-				
-				LogHelper.info("Closed Connections.");
+			Equity.getInstance().getLogger().info("Shutting down Proxy...");
+			if (Equity.getInstance().getProxyManager() == null) {
+				throw new IllegalStateException("ProxyManager is null!");
 			}
 			
 			if (Equity.getInstance().getProxyManager().getServerBootstrap() != null && Equity.getInstance().getProxyManager().getServerBootstrap().config().group() != null) {
-				LogHelper.info("Closing EventLoopGroup...");
+				Equity.getInstance().getLogger().info("Closing EventLoopGroup...");
 				Equity.getInstance().getProxyManager().getServerBootstrap().config().group().shutdownGracefully();
 				Equity.getInstance().getProxyManager().getServerBootstrap().config().group().awaitTermination(Equity.getInstance().getConfig().getShutdownTimeout(), TimeUnit.MILLISECONDS);
-				LogHelper.info("Closed EventLoopGroup.");
+				Equity.getInstance().getLogger().info("Closed EventLoopGroup.");
 			}
-			
 		} catch (InterruptedException | RuntimeException ex) {
-			LogHelper.error("Encountered an error processing 'shutdownProxy' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
-			ex.printStackTrace();
+			Equity.getInstance().getLogger().error("Encountered an error processing {}::shutdownProxy", getClass().getSimpleName(), ex);
 		}
 	}
 }

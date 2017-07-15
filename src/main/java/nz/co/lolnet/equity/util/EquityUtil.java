@@ -36,6 +36,7 @@ import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Packet;
 
@@ -97,7 +98,7 @@ public class EquityUtil {
 			
 			return true;
 		} catch (RuntimeException ex) {
-			LogHelper.error("Encountered an error processing 'safeRelease' - " + ex.getMessage());
+			Equity.getInstance().getLogger().error("Encountered an error processing EquityUtil::safeRelease", ex);
 		}
 		
 		return false;

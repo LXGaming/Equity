@@ -17,6 +17,7 @@
 package nz.co.lolnet.equity.managers;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -27,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Server;
-import nz.co.lolnet.equity.util.LogHelper;
 
 public class ServerManager {
 	
@@ -39,7 +39,7 @@ public class ServerManager {
 				continue;
 			}
 			
-			if (server.getProtocolVersions().contains(protocolVersion) && isAvailable(server.getHost(), server.getPort())) {
+			if (server.getProtocolVersions().contains(protocolVersion) && isAvailable(server)) {
 				validServers.add(server);
 			}
 		}
@@ -51,11 +51,12 @@ public class ServerManager {
 		return null;
 	}
 	
-	private boolean isAvailable(String host, int port) {
-		try (Socket socket = new Socket(host, port)) {
+	private boolean isAvailable(Server server) {
+		InetSocketAddress socketAddress = new InetSocketAddress(server.getHost(), server.getPort());
+		try (Socket socket = new Socket(socketAddress.getAddress().getHostAddress(), socketAddress.getPort())) {
 			return true;
 		} catch (IOException | RuntimeException ex) {
-			LogHelper.warn("Server " + host + ":" + port + " is not available!");
+			Equity.getInstance().getLogger().warn("Server {} is not available!", server.getIdentity());
 		}
 		
 		return false;

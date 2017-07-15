@@ -27,9 +27,9 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 
+import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Config;
 import nz.co.lolnet.equity.util.EquityUtil;
-import nz.co.lolnet.equity.util.LogHelper;
 
 public class Configuration {
 	
@@ -42,7 +42,7 @@ public class Configuration {
 	
 	public boolean loadConfiguration() {
 		setConfig((Config) loadObject(new Config(), "config.json"));
-		LogHelper.info("Loaded configuration files.");
+		Equity.getInstance().getLogger().info("Loaded configuration files.");
 		if (getConfig() != null) {
 			return true;
 		}
@@ -56,7 +56,7 @@ public class Configuration {
 		}
 		
 		saveObject(getConfig(), "config.json");
-		LogHelper.info("Saved configuration files.");
+		Equity.getInstance().getLogger().info("Saved configuration files.");
 		return true;
 	}
 	
@@ -88,8 +88,7 @@ public class Configuration {
 			
 			return jsonObject;
 		} catch (IOException | OutOfMemoryError | RuntimeException ex) {
-			LogHelper.error("Encountered an error processing 'loadObject' for '" + name + "' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
-			ex.printStackTrace();
+			Equity.getInstance().getLogger().error("Encountered an error processing {}::loadObject", getClass().getSimpleName(), ex);
 		}
 		return object;
 	}
@@ -108,19 +107,18 @@ public class Configuration {
 			
 			File parentFile = file.getParentFile();
 			if (parentFile != null && !parentFile.exists() && parentFile.mkdirs()) {
-				LogHelper.info("Successfully created directory '" + parentFile.getName() + "'.");
+				Equity.getInstance().getLogger().info("Successfully created directory '{}'.", parentFile.getName());
 			}
 			
 			if (!file.exists()) {
 				file.createNewFile();
-				LogHelper.info("Successfully created file '" + file.getName() + "'.");
+				Equity.getInstance().getLogger().info("Successfully created file '{}'.", file.getName());
 			}
 			
 			Files.write(file.toPath(), gson.toJson(object, object.getClass()).getBytes(StandardCharsets.UTF_8));
 			return true;
 		} catch (IOException | OutOfMemoryError | RuntimeException ex) {
-			LogHelper.error("Encountered an error processing 'saveObject' for '" + name + "' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
-			ex.printStackTrace();
+			Equity.getInstance().getLogger().error("Encountered an error processing {}::saveObject", getClass().getSimpleName(), ex);
 		}
 		return false;
 	}

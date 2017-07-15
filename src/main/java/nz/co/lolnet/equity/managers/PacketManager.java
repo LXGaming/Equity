@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.AbstractPacket;
 import nz.co.lolnet.equity.entries.Connection.ConnectionState;
 import nz.co.lolnet.equity.entries.Packet.PacketDirection;
@@ -34,7 +35,6 @@ import nz.co.lolnet.equity.packets.CPacketPing;
 import nz.co.lolnet.equity.packets.CPacketServerInfo;
 import nz.co.lolnet.equity.packets.SPacketPong;
 import nz.co.lolnet.equity.packets.SPacketServerInfo;
-import nz.co.lolnet.equity.util.LogHelper;
 
 public class PacketManager {
 	
@@ -84,8 +84,7 @@ public class PacketManager {
 				return;
 			}
 		} catch (ExceptionInInitializerError | IllegalAccessException | InstantiationException | RuntimeException ex) {
-			LogHelper.error("Encountered an error processing 'process' in '" + getClass().getSimpleName() + "' - " + ex.getMessage());
-			ex.printStackTrace();
+			Equity.getInstance().getLogger().error("Encountered an error processing {}::process", getClass().getSimpleName(), ex);
 		}
 	}
 	

@@ -23,10 +23,10 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Connection.ConnectionSide;
 import nz.co.lolnet.equity.util.EquityUtil;
-import nz.co.lolnet.equity.util.LogHelper;
 
 public class ProxyLegacyHandler extends ByteToMessageDecoder {
 	
@@ -66,7 +66,12 @@ public class ProxyLegacyHandler extends ByteToMessageDecoder {
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
-		LogHelper.error("Exception caught in '" + getClass().getSimpleName() + "' - " + throwable.getMessage());
+		if (Equity.getInstance() != null && Equity.getInstance().getConfig() != null && Equity.getInstance().getConfig().isDebug()) {
+			Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
+			return;
+		}
+		
+		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName());
 	}
 	
 	public ConnectionSide getConnectionSide() {

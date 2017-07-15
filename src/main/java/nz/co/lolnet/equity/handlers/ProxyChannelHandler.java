@@ -32,7 +32,7 @@ public class ProxyChannelHandler extends ChannelInitializer<Channel> {
 	
 	@Override
 	protected void initChannel(Channel channel) {
-		if (Equity.getInstance().getProxyManager() == null || !Equity.getInstance().getProxyManager().isRunning()) {
+		if (Equity.getInstance().getProxyManager() == null || !Equity.getInstance().isRunning()) {
 			channel.close();
 			return;
 		}

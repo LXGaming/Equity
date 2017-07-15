@@ -16,11 +16,11 @@
 
 package nz.co.lolnet.equity.packets;
 
+import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.AbstractPacket;
 import nz.co.lolnet.equity.entries.Connection.ConnectionState;
 import nz.co.lolnet.equity.entries.ProxyMessage;
 import nz.co.lolnet.equity.util.EquityUtil;
-import nz.co.lolnet.equity.util.LogHelper;
 
 public class CPacketLoginStart extends AbstractPacket {
 	
@@ -31,7 +31,7 @@ public class CPacketLoginStart extends AbstractPacket {
 		setUsername(proxyMessage.getPacket().readString());
 		proxyMessage.getConnection().setUsername(getUsername());
 		proxyMessage.getConnection().setConnectionState(ConnectionState.PLAY);
-		LogHelper.info(EquityUtil.getAddress(proxyMessage.getConnection().getAddress()) + " -> " + getUsername() + ".");
+		Equity.getInstance().getLogger().info("{} -> LOGIN {}", EquityUtil.getAddress(proxyMessage.getConnection().getAddress()), getUsername());
 	}
 	
 	public String getUsername() {

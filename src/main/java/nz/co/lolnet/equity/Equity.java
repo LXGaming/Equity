@@ -16,6 +16,11 @@
 
 package nz.co.lolnet.equity;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+
 import io.netty.util.ResourceLeakDetector;
 import nz.co.lolnet.equity.configuration.Configuration;
 import nz.co.lolnet.equity.entries.Config;
@@ -24,13 +29,14 @@ import nz.co.lolnet.equity.managers.PacketManager;
 import nz.co.lolnet.equity.managers.ProxyManager;
 import nz.co.lolnet.equity.managers.ServerManager;
 import nz.co.lolnet.equity.util.EquityUtil;
-import nz.co.lolnet.equity.util.LogHelper;
 import nz.co.lolnet.equity.util.Reference;
 import nz.co.lolnet.equity.util.ShutdownHook;
 
 public class Equity {
 	
 	private static Equity instance;
+	private boolean running;
+	private Logger logger;
 	private Configuration configuration;
 	private ConnectionManager connectionManager;
 	private PacketManager packetManager;
@@ -39,6 +45,8 @@ public class Equity {
 	
 	public Equity() {
 		instance = this;
+		running = false;
+		logger = LogManager.getLogger(Reference.APP_ID);
 		connectionManager = new ConnectionManager();
 		packetManager = new PacketManager();
 		proxyManager = new ProxyManager();
@@ -47,18 +55,19 @@ public class Equity {
 	
 	public void loadEquity() {
 		EquityUtil.getApplicationInformation().forEach(action -> {
-			LogHelper.info(action);
+			Equity.getInstance().getLogger().info(action);
 		});
 		
-		LogHelper.info("Initializing...");
+		Equity.getInstance().getLogger().info("Initializing...");
 		if (getConfiguration() == null || !getConfiguration().loadConfiguration() || !getConfiguration().saveConfiguration()) {
-			LogHelper.error("Unable to load " + Reference.APP_NAME + " as the Configurations are not available!");
+			Equity.getInstance().getLogger().error("Unable to load " + Reference.APP_NAME + " as the Configurations are not available!");
 		}
 		
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		if (getConfig().isDebug()) {
 			ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
-			LogHelper.debug("Debugging enabled.");
+			Configurator.setLevel(getLogger().getName(), Level.DEBUG);
+			Equity.getInstance().getLogger().debug("Debugging enabled.");
 		} else {
 			ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
 		}
@@ -66,10 +75,23 @@ public class Equity {
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 		getPacketManager().registerPackets();
 		getProxyManager().startProxy();
+		Equity.getInstance().setRunning(false);
 	}
 	
 	public static Equity getInstance() {
 		return instance;
+	}
+	
+	public boolean isRunning() {
+		return running;
+	}
+	
+	public void setRunning(boolean running) {
+		this.running = running;
+	}
+	
+	public Logger getLogger() {
+		return logger;
 	}
 	
 	public Configuration getConfiguration() {
@@ -84,6 +106,7 @@ public class Equity {
 		if (getConfiguration() != null) {
 			return getConfiguration().getConfig();
 		}
+		
 		return null;
 	}
 	
