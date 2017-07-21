@@ -100,11 +100,12 @@ public class ProxyManager {
 					
 					connection.getClientChannel().read();
 				} else {
-					connection.getClientChannel().close();
+					Equity.getInstance().getConnectionManager().removeConnection(connection);
 				}
 			});
 		} catch (RuntimeException ex) {
 			Equity.getInstance().getLogger().error("Encountered an error processing {}::createServerConnection", getClass().getSimpleName(), ex);
+			Equity.getInstance().getConnectionManager().removeConnection(connection);
 		}
 	}
 	

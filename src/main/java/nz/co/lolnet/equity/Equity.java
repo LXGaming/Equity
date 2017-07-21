@@ -60,7 +60,7 @@ public class Equity {
 		
 		Equity.getInstance().getLogger().info("Initializing...");
 		if (getConfiguration() == null || !getConfiguration().loadConfiguration() || !getConfiguration().saveConfiguration()) {
-			Equity.getInstance().getLogger().error("Unable to load " + Reference.APP_NAME + " as the Configurations are not available!");
+			Equity.getInstance().getLogger().error("Unable to load {} as the Configurations are not available!", Reference.APP_NAME);
 		}
 		
 		System.setProperty("java.net.preferIPv4Stack", "true");
@@ -70,6 +70,7 @@ public class Equity {
 			Equity.getInstance().getLogger().debug("Debugging enabled.");
 		} else {
 			ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
+			Configurator.setLevel(getLogger().getName(), Level.INFO);
 		}
 		
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook());

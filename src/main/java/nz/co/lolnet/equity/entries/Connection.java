@@ -152,7 +152,7 @@ public class Connection {
 	
 	public enum ConnectionSide {
 		
-		CLIENT, SERVER, UNKNOWN;
+		CLIENT, SERVER;
 		
 		public ConnectionSide getChannelSide() {
 			if (equals(ConnectionSide.CLIENT)) {
@@ -163,7 +163,7 @@ public class Connection {
 				return ConnectionSide.CLIENT;
 			}
 			
-			return ConnectionSide.UNKNOWN;
+			return null;
 		}
 		
 		@Override

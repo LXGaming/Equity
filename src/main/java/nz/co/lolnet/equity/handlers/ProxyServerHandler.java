@@ -16,7 +16,6 @@
 
 package nz.co.lolnet.equity.handlers;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -38,7 +37,6 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
 		ctx.read();
-		ctx.write(Unpooled.EMPTY_BUFFER);
 	}
 	
 	@Override
@@ -73,12 +71,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
-		if (Equity.getInstance() != null && Equity.getInstance().getConfig() != null && Equity.getInstance().getConfig().isDebug()) {
-			Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
-			return;
-		}
-		
-		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName());
+		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
 	}
 	
 	public ConnectionSide getConnectionSide() {

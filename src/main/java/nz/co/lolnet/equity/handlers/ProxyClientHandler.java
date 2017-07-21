@@ -18,7 +18,6 @@ package nz.co.lolnet.equity.handlers;
 
 import java.net.InetSocketAddress;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -44,7 +43,6 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 		connection.setClientChannel(ctx.channel());
 		Equity.getInstance().getConnectionManager().addConnection(connection);
 		ctx.read();
-		ctx.write(Unpooled.EMPTY_BUFFER);
 	}
 	
 	@Override
@@ -57,6 +55,7 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 		if (msg instanceof HAProxyMessage && Equity.getInstance().getConfig().isProxyProtocol()) {
 			HAProxyMessage haProxyMessage = (HAProxyMessage) msg;
 			Equity.getInstance().getConnectionManager().setSocketAddress(connection, new InetSocketAddress(haProxyMessage.sourceAddress(), haProxyMessage.sourcePort()));
+			ctx.read();
 			return;
 		}
 		
@@ -86,12 +85,7 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
-		if (Equity.getInstance() != null && Equity.getInstance().getConfig() != null && Equity.getInstance().getConfig().isDebug()) {
-			Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
-			return;
-		}
-		
-		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName());
+		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
 	}
 	
 	public ConnectionSide getConnectionSide() {
