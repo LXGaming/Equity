@@ -77,6 +77,7 @@ public class ConnectionManager {
 			return;
 		}
 		
+		connection.setActive(false);
 		if (connection.getClientChannel() != null && connection.getClientChannel().isActive()) {
 			connection.getClientChannel().close();
 		}

@@ -34,6 +34,7 @@ public class Connection {
 	private Channel serverChannel;
 	private int protocolVersion;
 	private String username;
+	private boolean active;
 	
 	public Connection() {
 		packetQueue = new ArrayList<Object>();
@@ -138,6 +139,14 @@ public class Connection {
 	
 	public void setUsername(String username) {
 		this.username = username;
+	}
+	
+	public boolean isActive() {
+		return active;
+	}
+	
+	public void setActive(boolean active) {
+		this.active = active;
 	}
 	
 	public enum ConnectionState {

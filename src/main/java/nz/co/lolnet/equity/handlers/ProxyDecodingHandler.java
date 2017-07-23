@@ -46,6 +46,11 @@ public class ProxyDecodingHandler extends ByteToMessageDecoder {
 			throw new IllegalStateException(getConnectionSide().toString() + " Connection error!");
 		}
 		
+		if (!connection.isActive()) {
+			in.skipBytes(in.readableBytes());
+			return;
+		}
+		
 		Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
 		if (channel != null && connection.getConnectionState().equals(ConnectionState.PLAY)) {
 			channel.writeAndFlush(getPacket(ctx, in, in.readableBytes()).getByteBuf());

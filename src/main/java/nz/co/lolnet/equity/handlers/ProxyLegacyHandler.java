@@ -47,6 +47,11 @@ public class ProxyLegacyHandler extends ByteToMessageDecoder {
 			return;
 		}
 		
+		if (!connection.isActive()) {
+			in.skipBytes(in.readableBytes());
+			return;
+		}
+		
 		in.markReaderIndex();
 		short packetId = in.readUnsignedByte();
 		if (packetId == 254 && in.isReadable() && in.readUnsignedByte() == 1) {

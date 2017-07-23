@@ -41,6 +41,7 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 	public void channelActive(ChannelHandlerContext ctx) {
 		Connection connection = new Connection();
 		connection.setClientChannel(ctx.channel());
+		connection.setActive(true);
 		Equity.getInstance().getConnectionManager().addConnection(connection);
 		ctx.read();
 	}
