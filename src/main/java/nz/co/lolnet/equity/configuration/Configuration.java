@@ -67,11 +67,11 @@ public class Configuration {
 			}
 			
 			Gson gson = EquityUtil.getGsonWithTypeAdapter(object);
-			File file = getPath().resolve(name).toFile();
-			if (gson == null || file == null) {
-				throw new NullPointerException("Gson or File are null!");
+			if (gson == null || getPath() == null) {
+				throw new NullPointerException("Gson or Path is null!");
 			}
 			
+			File file = getPath().resolve(name).toFile();
 			if (!file.exists() && !saveObject(object, name)) {
 				return object;
 			}
@@ -90,6 +90,7 @@ public class Configuration {
 		} catch (IOException | OutOfMemoryError | RuntimeException ex) {
 			Equity.getInstance().getLogger().error("Encountered an error processing {}::loadObject", getClass().getSimpleName(), ex);
 		}
+		
 		return object;
 	}
 	
@@ -100,11 +101,11 @@ public class Configuration {
 			}
 			
 			Gson gson = EquityUtil.getGsonWithTypeAdapter(object);
-			File file = getPath().resolve(name).toFile();
-			if (gson == null || file == null) {
-				throw new NullPointerException("Gson or File are null!");
+			if (gson == null || getPath() == null) {
+				throw new NullPointerException("Gson or Path is null!");
 			}
 			
+			File file = getPath().resolve(name).toFile();
 			File parentFile = file.getParentFile();
 			if (parentFile != null && !parentFile.exists() && parentFile.mkdirs()) {
 				Equity.getInstance().getLogger().info("Successfully created directory '{}'.", parentFile.getName());
@@ -120,6 +121,7 @@ public class Configuration {
 		} catch (IOException | OutOfMemoryError | RuntimeException ex) {
 			Equity.getInstance().getLogger().error("Encountered an error processing {}::saveObject", getClass().getSimpleName(), ex);
 		}
+		
 		return false;
 	}
 	

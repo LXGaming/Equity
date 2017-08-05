@@ -34,7 +34,6 @@ public class CPacketHandshake extends AbstractPacket {
 		setServerAddress(proxyMessage.getPacket().readString());
 		setServerPort(proxyMessage.getPacket().getByteBuf().readUnsignedShort());
 		setState(proxyMessage.getPacket().readVarInt());
-		
 		proxyMessage.getConnection().setProtocolVersion(getProtocolVersion());
 		if (getState() == 1) {
 			proxyMessage.getConnection().setConnectionState(ConnectionState.STATUS);

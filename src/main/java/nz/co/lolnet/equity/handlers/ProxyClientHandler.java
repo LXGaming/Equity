@@ -66,6 +66,7 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 			Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
 			if (channel == null) {
 				connection.getPacketQueue().add(proxyMessage);
+				ctx.read();
 				return;
 			}
 			

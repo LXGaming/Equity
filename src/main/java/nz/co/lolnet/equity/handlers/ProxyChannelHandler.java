@@ -38,7 +38,6 @@ public class ProxyChannelHandler extends ChannelInitializer<Channel> {
 		}
 		
 		channel.pipeline().addFirst("ProxyDecoder", new ProxyDecodingHandler(getConnectionSide()));
-		
 		if (getConnectionSide() != null && getConnectionSide().equals(ConnectionSide.CLIENT)) {
 			channel.pipeline().addFirst("ProxyLegacy", new ProxyLegacyHandler());
 			if (Equity.getInstance().getConfig().isProxyProtocol()) {

@@ -50,6 +50,7 @@ Temporary Items
 .settings
 .classpath
 .project
+logs
 client.launch
 server.launch
 **/*.json

@@ -44,6 +44,7 @@ public class ProxyEncodingHandler extends MessageToByteEncoder<ProxyMessage> {
 		packet.writeVarInt(length);
 		packet.getByteBuf().writeBytes(msg.getPacket().getByteBuf());
 		msg.getPacket().getByteBuf().release();
+		ctx.read();
 	}
 	
 	public ConnectionSide getConnectionSide() {

@@ -127,7 +127,6 @@ public class Packet {
 		while (getByteBuf().readableBytes() != 0) {
 			byte read = getByteBuf().readByte();
 			result |= (read & 127) << (bytesRead++ * 7);
-			
 			if (bytesRead > maxBytes) {
 				throw new RuntimeException("VarInt too big");
 			}
