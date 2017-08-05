@@ -78,12 +78,12 @@ public class Configuration {
 			
 			String string = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
 			if (StringUtils.isBlank(string)) {
-				throw new IOException("File '" + name + "' is blank!");
+				throw new IOException("File is blank!");
 			}
 			
 			Object jsonObject = gson.fromJson(string, object.getClass());
 			if (jsonObject == null) {
-				throw new JsonParseException("Failed to parse File '" + name + "'!");
+				throw new JsonParseException("Failed to parse File!");
 			}
 			
 			return jsonObject;
@@ -108,12 +108,12 @@ public class Configuration {
 			File file = getPath().resolve(name).toFile();
 			File parentFile = file.getParentFile();
 			if (parentFile != null && !parentFile.exists() && parentFile.mkdirs()) {
-				Equity.getInstance().getLogger().info("Successfully created directory '{}'.", parentFile.getName());
+				Equity.getInstance().getLogger().info("Successfully created directory {}.", parentFile.getName());
 			}
 			
 			if (!file.exists()) {
 				file.createNewFile();
-				Equity.getInstance().getLogger().info("Successfully created file '{}'.", file.getName());
+				Equity.getInstance().getLogger().info("Successfully created file {}.", file.getName());
 			}
 			
 			Files.write(file.toPath(), gson.toJson(object, object.getClass()).getBytes(StandardCharsets.UTF_8));
