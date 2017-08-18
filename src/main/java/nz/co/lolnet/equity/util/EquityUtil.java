@@ -122,7 +122,7 @@ public class EquityUtil {
 	}
 	
 	public static String getHost(SocketAddress socketAddress) {
-		if (socketAddress != null && socketAddress.getClass().isAssignableFrom(InetSocketAddress.class)) {
+		if (socketAddress != null && socketAddress instanceof InetSocketAddress) {
 			InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
 			return inetSocketAddress.getHostString();
 		}
@@ -131,7 +131,7 @@ public class EquityUtil {
 	}
 	
 	public static int getPort(SocketAddress socketAddress) {
-		if (socketAddress != null && socketAddress.getClass().isAssignableFrom(InetSocketAddress.class)) {
+		if (socketAddress != null && socketAddress instanceof InetSocketAddress) {
 			InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
 			return inetSocketAddress.getPort();
 		}
