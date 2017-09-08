@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Packet;
@@ -78,13 +79,8 @@ public class ConnectionManager {
 		}
 		
 		connection.setActive(false);
-		if (connection.getClientChannel() != null && connection.getClientChannel().isActive()) {
-			connection.getClientChannel().close();
-		}
-		
-		if (connection.getServerChannel() != null && connection.getServerChannel().isActive()) {
-			connection.getServerChannel().close();
-		}
+		closeChannel(connection.getClientChannel());
+		closeChannel(connection.getServerChannel());
 		
 		if (connection.getPacketQueue() != null && !connection.getPacketQueue().isEmpty()) {
 			for (Iterator<Object> iterator = connection.getPacketQueue().iterator(); iterator.hasNext();) {
@@ -101,6 +97,20 @@ public class ConnectionManager {
 		}
 		
 		Equity.getInstance().getLogger().info("{} -> Disconnected", connection.getIdentity());
+	}
+	
+	private void closeChannel(Channel channel) {
+		if (channel == null) {
+			return;
+		}
+		
+		if (channel.hasAttr(EquityUtil.getAttributeKey())) {
+			channel.attr(EquityUtil.getAttributeKey()).set(null);
+		}
+		
+		if (channel.isActive()) {
+			channel.close();
+		}
 	}
 	
 	public List<Connection> getConnections() {

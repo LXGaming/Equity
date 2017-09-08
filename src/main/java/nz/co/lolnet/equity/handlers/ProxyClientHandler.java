@@ -62,7 +62,7 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 		
 		if (msg instanceof ProxyMessage) {
 			ProxyMessage proxyMessage = (ProxyMessage) msg;
-			Equity.getInstance().getPacketManager().process(proxyMessage, PacketDirection.SERVERBOUND);
+			Equity.getInstance().getPacketManager().processProxyMessage(proxyMessage, PacketDirection.SERVERBOUND);
 			Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
 			if (channel == null) {
 				connection.getPacketQueue().add(proxyMessage);
@@ -88,6 +88,7 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
 		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
+		throwable.printStackTrace();
 	}
 	
 	public ConnectionSide getConnectionSide() {

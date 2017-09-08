@@ -16,15 +16,10 @@
 
 package nz.co.lolnet.equity;
 
-import java.nio.file.Paths;
-
-import nz.co.lolnet.equity.configuration.Configuration;
-
 public class Main {
 	
 	public static void main(String[] args) {
 		Equity equity = new Equity();
-		equity.setConfiguration(new Configuration(Paths.get(System.getProperty("user.dir"))));
 		equity.loadEquity();
 	}
 }

@@ -16,6 +16,15 @@
 
 package nz.co.lolnet.equity.managers;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -74,7 +83,7 @@ public class ProxyManager {
 				throw new IllegalArgumentException("Required arguments are invalid!");
 			}
 			
-			Server server = Equity.getInstance().getServerManager().getServer(connection.getProtocolVersion());
+			Server server = getServer(connection.getProtocolVersion());
 			if (server == null) {
 				Equity.getInstance().getLogger().warn("Failed to find server handling protocol {}", connection.getProtocolVersion());
 				Equity.getInstance().getConnectionManager().removeConnection(connection);
@@ -106,6 +115,35 @@ public class ProxyManager {
 		} catch (RuntimeException ex) {
 			Equity.getInstance().getLogger().error("Encountered an error processing {}::createServerConnection", getClass().getSimpleName(), ex);
 			Equity.getInstance().getConnectionManager().removeConnection(connection);
+		}
+	}
+	
+	private Server getServer(int protocolVersion) {
+		List<Server> servers = new ArrayList<Server>();
+		for (Server server : Equity.getInstance().getConfig().getServers()) {
+			if (server == null || StringUtils.isBlank(server.getHost()) || server.getProtocolVersions() == null) {
+				continue;
+			}
+			
+			if (server.getProtocolVersions().contains(protocolVersion) && isAvailable(server.getIdentity(), server.getHost(), server.getPort())) {
+				servers.add(server);
+			}
+		}
+		
+		if (servers != null && !servers.isEmpty()) {
+			return servers.get(new SecureRandom().nextInt(servers.size()));
+		}
+		
+		return null;
+	}
+	
+	private boolean isAvailable(String identity, String host, int port) {
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress(host, port));
+			return true;
+		} catch (IOException | RuntimeException ex) {
+			Equity.getInstance().getLogger().warn("Server {} is not available!", identity);
+			return false;
 		}
 	}
 	

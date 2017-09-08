@@ -40,24 +40,14 @@ public class Configuration {
 		this.path = path;
 	}
 	
-	public boolean loadConfiguration() {
+	public void loadConfiguration() {
 		setConfig((Config) loadObject(new Config(), "config.json"));
 		Equity.getInstance().getLogger().info("Loaded configuration files.");
-		if (getConfig() != null) {
-			return true;
-		}
-		
-		return false;
 	}
 	
-	public boolean saveConfiguration() {
-		if (getConfig() == null) {
-			return false;
-		}
-		
+	public void saveConfiguration() {
 		saveObject(getConfig(), "config.json");
 		Equity.getInstance().getLogger().info("Saved configuration files.");
-		return true;
 	}
 	
 	private Object loadObject(Object object, String name) {

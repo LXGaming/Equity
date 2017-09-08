@@ -16,8 +16,11 @@
 
 package nz.co.lolnet.equity.entries;
 
+import java.util.Objects;
+
 import nz.co.lolnet.equity.entries.Connection.ConnectionState;
 import nz.co.lolnet.equity.entries.Packet.PacketDirection;
+import nz.co.lolnet.equity.util.EquityUtil;
 
 public class PacketData {
 	
@@ -47,5 +50,32 @@ public class PacketData {
 	
 	public PacketDirection getPacketDirection() {
 		return packetDirection;
+	}
+	
+	@Override
+	public boolean equals(Object object) {
+		if (object == null || !(object instanceof PacketData)) {
+			return false;
+		}
+		
+		PacketData packetData = (PacketData) object;
+		if (Objects.equals(getPacketId(), packetData.getPacketId())
+				&& Objects.equals(getProtocolVersion(), packetData.getProtocolVersion())
+				&& Objects.equals(getConnectionState(), packetData.getConnectionState())
+				&& Objects.equals(getPacketDirection(), packetData.getPacketDirection())) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(getPacketId(), getProtocolVersion(), getConnectionState(), getPacketDirection());
+	}
+	
+	@Override
+	public String toString() {
+		return EquityUtil.getGsonWithTypeAdapter(getClass()).toJson(this, getClass());
 	}
 }

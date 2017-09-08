@@ -30,6 +30,14 @@ public class ProxyMessage {
 		this.packet = packet;
 	}
 	
+	public boolean isValid() {
+		if (getConnection() != null && getPacket() != null) {
+			return true;
+		}
+		
+		return false;
+	}
+	
 	public Connection getConnection() {
 		return connection;
 	}

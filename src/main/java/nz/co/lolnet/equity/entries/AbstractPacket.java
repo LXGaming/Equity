@@ -16,8 +16,6 @@
 
 package nz.co.lolnet.equity.entries;
 
-import nz.co.lolnet.equity.util.EquityUtil;
-
 public abstract class AbstractPacket {
 	
 	public void read(ProxyMessage proxyMessage) {
@@ -26,10 +24,5 @@ public abstract class AbstractPacket {
 	
 	public void write(ProxyMessage proxyMessage) {
 		throw new UnsupportedOperationException("Packet must implement write method!");
-	}
-	
-	@Override
-	public String toString() {
-		return EquityUtil.getGsonWithTypeAdapter(getClass()).toJson(this, getClass());
 	}
 }

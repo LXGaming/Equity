@@ -16,6 +16,8 @@
 
 package nz.co.lolnet.equity;
 
+import java.nio.file.Paths;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +29,6 @@ import nz.co.lolnet.equity.entries.Config;
 import nz.co.lolnet.equity.managers.ConnectionManager;
 import nz.co.lolnet.equity.managers.PacketManager;
 import nz.co.lolnet.equity.managers.ProxyManager;
-import nz.co.lolnet.equity.managers.ServerManager;
 import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.Reference;
 import nz.co.lolnet.equity.util.ShutdownHook;
@@ -36,21 +37,20 @@ public class Equity {
 	
 	private static Equity instance;
 	private boolean running;
-	private Logger logger;
-	private Configuration configuration;
-	private ConnectionManager connectionManager;
-	private PacketManager packetManager;
-	private ProxyManager proxyManager;
-	private ServerManager serverManager;
+	private final Logger logger;
+	private final Configuration configuration;
+	private final ConnectionManager connectionManager;
+	private final PacketManager packetManager;
+	private final ProxyManager proxyManager;
 	
 	public Equity() {
 		instance = this;
 		running = false;
 		logger = LogManager.getLogger(Reference.APP_ID);
+		configuration = new Configuration(Paths.get(System.getProperty("user.dir")));
 		connectionManager = new ConnectionManager();
 		packetManager = new PacketManager();
 		proxyManager = new ProxyManager();
-		serverManager = new ServerManager();
 	}
 	
 	public void loadEquity() {
@@ -59,9 +59,8 @@ public class Equity {
 		});
 		
 		Equity.getInstance().getLogger().info("Initializing...");
-		if (getConfiguration() == null || !getConfiguration().loadConfiguration() || !getConfiguration().saveConfiguration()) {
-			Equity.getInstance().getLogger().error("Unable to load {} as the Configurations are not available!", Reference.APP_NAME);
-		}
+		getConfiguration().loadConfiguration();
+		getConfiguration().saveConfiguration();
 		
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		if (getConfig().isDebug()) {
@@ -99,10 +98,6 @@ public class Equity {
 		return configuration;
 	}
 	
-	public void setConfiguration(Configuration configuration) {
-		this.configuration = configuration;
-	}
-	
 	public Config getConfig() {
 		if (getConfiguration() != null) {
 			return getConfiguration().getConfig();
@@ -121,9 +116,5 @@ public class Equity {
 	
 	public ProxyManager getProxyManager() {
 		return proxyManager;
-	}
-	
-	public ServerManager getServerManager() {
-		return serverManager;
 	}
 }

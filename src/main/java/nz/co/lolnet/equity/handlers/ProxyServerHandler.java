@@ -48,7 +48,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 		
 		if (msg instanceof ProxyMessage) {
 			ProxyMessage proxyMessage = (ProxyMessage) msg;
-			Equity.getInstance().getPacketManager().process(proxyMessage, PacketDirection.CLIENTBOUND);
+			Equity.getInstance().getPacketManager().processProxyMessage(proxyMessage, PacketDirection.CLIENTBOUND);
 			Channel channel = connection.getChannel(getConnectionSide().getChannelSide());
 			if (channel == null) {
 				throw new IllegalStateException(getConnectionSide().getChannelSide() + " Channel does not exist!");
@@ -72,6 +72,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
 		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
+		throwable.printStackTrace();
 	}
 	
 	public ConnectionSide getConnectionSide() {

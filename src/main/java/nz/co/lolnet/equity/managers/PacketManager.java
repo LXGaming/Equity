@@ -16,12 +16,9 @@
 
 package nz.co.lolnet.equity.managers;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Objects;
 
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.AbstractPacket;
@@ -38,80 +35,65 @@ import nz.co.lolnet.equity.packets.SPacketServerInfo;
 
 public class PacketManager {
 	
-	private final Map<Class<? extends AbstractPacket>, List<PacketData>> registeredPackets;
+	private final Map<PacketData, Class<? extends AbstractPacket>> registeredPackets;
 	
 	public PacketManager() {
-		registeredPackets = new HashMap<Class<? extends AbstractPacket>, List<PacketData>>();
+		registeredPackets = new HashMap<PacketData, Class<? extends AbstractPacket>>();
 	}
 	
 	public void registerPackets() {
-		getRegisteredPackets().put(CPacketHandshake.class, Arrays.asList(
-				new PacketData(0, 0, ConnectionState.HANDSHAKE, PacketDirection.SERVERBOUND)));
-		getRegisteredPackets().put(CPacketLoginStart.class, Arrays.asList(
-				new PacketData(0, 0, ConnectionState.LOGIN, PacketDirection.SERVERBOUND)));
-		getRegisteredPackets().put(CPacketPing.class, Arrays.asList(
-				new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.SERVERBOUND)));
-		getRegisteredPackets().put(CPacketServerInfo.class, Arrays.asList(
-				new PacketData(0, 0, ConnectionState.STATUS, PacketDirection.SERVERBOUND)));
-		getRegisteredPackets().put(SPacketPong.class, Arrays.asList(
-				new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND)));
-		getRegisteredPackets().put(SPacketServerInfo.class, Arrays.asList(
-				new PacketData(0, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND)));
+		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.HANDSHAKE, PacketDirection.SERVERBOUND), CPacketHandshake.class);
+		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.LOGIN, PacketDirection.SERVERBOUND), CPacketLoginStart.class);
+		getRegisteredPackets().put(new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.SERVERBOUND), CPacketPing.class);
+		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.STATUS, PacketDirection.SERVERBOUND), CPacketServerInfo.class);
+		getRegisteredPackets().put(new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND), SPacketPong.class);
+		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND), SPacketServerInfo.class);
 	}
 	
-	public void process(ProxyMessage proxyMessage, PacketDirection packetDirection) {
+	public void processProxyMessage(ProxyMessage proxyMessage, PacketDirection packetDirection) {
 		try {
-			if (proxyMessage == null || packetDirection == null || proxyMessage.getConnection() == null || proxyMessage.getPacket() == null) {
-				return;
+			if (proxyMessage == null || packetDirection == null || !proxyMessage.isValid()) {
+				throw new IllegalArgumentException("Provided arguments are invalid!");
 			}
 			
-			if (proxyMessage.getConnection().getConnectionState() == null || proxyMessage.getConnection().getConnectionState().equals(ConnectionState.PLAY)) {
+			if (Objects.equals(proxyMessage.getConnection().getConnectionState(), ConnectionState.PLAY)) {
 				throw new IllegalStateException("Cannot process encrypted packets!");
 			}
 			
 			proxyMessage.getPacket().getByteBuf().markReaderIndex();
 			int packetId = proxyMessage.getPacket().readVarInt();
-			for (Iterator<Entry<Class<? extends AbstractPacket>, List<PacketData>>> iterator = getRegisteredPackets().entrySet().iterator(); iterator.hasNext();) {
-				Entry<Class<? extends AbstractPacket>, List<PacketData>> entry = iterator.next();
-				PacketData targetPacketData = new PacketData(packetId, proxyMessage.getConnection().getProtocolVersion(), proxyMessage.getConnection().getConnectionState(), packetDirection);
-				if (entry == null || !checkPacketData(targetPacketData, entry.getValue())) {
-					continue;
-				}
-				
-				AbstractPacket abstractPacket = entry.getKey().newInstance();
-				abstractPacket.read(proxyMessage);
+			AbstractPacket abstractPacket = getPacket(proxyMessage.getConnection().createPacketData(packetId, packetDirection));
+			if (abstractPacket == null) {
 				proxyMessage.getPacket().getByteBuf().resetReaderIndex();
 				return;
 			}
-		} catch (ExceptionInInitializerError | IllegalAccessException | InstantiationException | RuntimeException ex) {
+			
+			abstractPacket.read(proxyMessage);
+			proxyMessage.getPacket().getByteBuf().resetReaderIndex();
+		} catch (RuntimeException ex) {
 			Equity.getInstance().getLogger().error("Encountered an error processing {}::process", getClass().getSimpleName(), ex);
 		}
 	}
 	
-	private boolean checkPacketData(PacketData targetPacketData, List<PacketData> packetDatas) {
-		if (targetPacketData == null || targetPacketData.getConnectionState() == null || targetPacketData.getPacketDirection() == null || packetDatas == null) {
-			return false;
-		}
-		
-		for (Iterator<PacketData> iterator = packetDatas.iterator(); iterator.hasNext();) {
-			PacketData packetData = iterator.next();
-			if (packetData == null || packetData.getConnectionState() == null || packetData.getPacketDirection() == null) {
-				continue;
+	private AbstractPacket getPacket(PacketData packetData) {
+		try {
+			if (packetData == null || getRegisteredPackets() == null) {
+				throw new IllegalArgumentException("Provided arguments are invalid!");
 			}
 			
-			if (!packetData.getConnectionState().equals(targetPacketData.getConnectionState()) || !packetData.getPacketDirection().equals(targetPacketData.getPacketDirection())) {
-				continue;
+			Class<? extends AbstractPacket> abstractPacket = getRegisteredPackets().get(packetData);
+			if (abstractPacket == null && packetData.getProtocolVersion() != 0) {
+				return getPacket(new PacketData(packetData.getPacketId(), 0, packetData.getConnectionState(), packetData.getPacketDirection()));
 			}
 			
-			if (packetData.getProtocolVersion() <= targetPacketData.getProtocolVersion() && packetData.getPacketId() == targetPacketData.getPacketId()) {
-				return true;
-			}
+			return abstractPacket.newInstance();
+		} catch (ExceptionInInitializerError | IllegalAccessException | InstantiationException | RuntimeException ex) {
+			Equity.getInstance().getLogger().error("Encountered an error processing {}::getPacket", getClass().getSimpleName(), ex);
+			return null;
 		}
-		
-		return false;
 	}
 	
-	public Map<Class<? extends AbstractPacket>, List<PacketData>> getRegisteredPackets() {
+	public Map<PacketData, Class<? extends AbstractPacket>> getRegisteredPackets() {
 		return registeredPackets;
 	}
 }
