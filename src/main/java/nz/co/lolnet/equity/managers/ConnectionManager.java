@@ -18,7 +18,6 @@ package nz.co.lolnet.equity.managers;
 
 import java.net.SocketAddress;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
@@ -81,22 +80,26 @@ public class ConnectionManager {
 		connection.setActive(false);
 		closeChannel(connection.getClientChannel());
 		closeChannel(connection.getServerChannel());
+		clearPacketQueue(connection);
+		Equity.getInstance().getLogger().info("{} -> Disconnected", connection.getIdentity());
+	}
+	
+	public void clearPacketQueue(Connection connection) {
+		if (connection == null || connection.getPacketQueue() == null) {
+			return;
+		}
 		
-		if (connection.getPacketQueue() != null && !connection.getPacketQueue().isEmpty()) {
-			for (Iterator<Object> iterator = connection.getPacketQueue().iterator(); iterator.hasNext();) {
-				Object object = iterator.next();
-				iterator.remove();
-				if (object instanceof ByteBuf) {
-					EquityUtil.safeRelease(((ByteBuf) object));
-				}
-				
-				if (object instanceof ProxyMessage) {
-					EquityUtil.safeRelease(((ProxyMessage) object).getPacket().getByteBuf());
-				}
+		for (Object object : connection.getPacketQueue()) {
+			if (object instanceof ByteBuf) {
+				EquityUtil.safeRelease(((ByteBuf) object));
+			}
+			
+			if (object instanceof ProxyMessage) {
+				EquityUtil.safeRelease(((ProxyMessage) object).getPacket().getByteBuf());
 			}
 		}
 		
-		Equity.getInstance().getLogger().info("{} -> Disconnected", connection.getIdentity());
+		connection.getPacketQueue().clear();
 	}
 	
 	private void closeChannel(Channel channel) {

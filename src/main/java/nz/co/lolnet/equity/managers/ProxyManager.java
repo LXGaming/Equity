@@ -100,14 +100,14 @@ public class ProxyManager {
 					.handler(new ProxyChannelHandler(ConnectionSide.SERVER));
 			
 			ChannelFuture channelFuture = bootstrap.connect(server.getHost(), server.getPort());
-			channelFuture.addListener(future -> {
+			channelFuture.addListener((ChannelFuture future) -> {
 				if (future.isSuccess()) {
 					connection.setServerChannel(channelFuture.channel());
 					for (Object object : connection.getPacketQueue()) {
-						connection.getServerChannel().writeAndFlush(object).addListener(EquityUtil.getFutureListener(channelFuture.channel()));
+						connection.getServerChannel().writeAndFlush(object).addListener(EquityUtil.getFutureListener(connection.getClientChannel()));
 					}
 					
-					connection.getClientChannel().read();
+					Equity.getInstance().getConnectionManager().clearPacketQueue(connection);
 				} else {
 					Equity.getInstance().getConnectionManager().removeConnection(connection);
 				}
@@ -139,7 +139,7 @@ public class ProxyManager {
 	
 	private boolean isAvailable(String identity, String host, int port) {
 		try (Socket socket = new Socket()) {
-			socket.connect(new InetSocketAddress(host, port));
+			socket.connect(new InetSocketAddress(host, port), Equity.getInstance().getConfig().getConnectTimeout());
 			return true;
 		} catch (IOException | RuntimeException ex) {
 			Equity.getInstance().getLogger().warn("Server {} is not available!", identity);
