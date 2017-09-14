@@ -26,6 +26,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import io.netty.util.ResourceLeakDetector;
 import nz.co.lolnet.equity.configuration.Configuration;
 import nz.co.lolnet.equity.entries.Config;
+import nz.co.lolnet.equity.entries.Messages;
 import nz.co.lolnet.equity.managers.ConnectionManager;
 import nz.co.lolnet.equity.managers.PacketManager;
 import nz.co.lolnet.equity.managers.ProxyManager;
@@ -101,6 +102,14 @@ public class Equity {
 	public Config getConfig() {
 		if (getConfiguration() != null) {
 			return getConfiguration().getConfig();
+		}
+		
+		return null;
+	}
+	
+	public Messages getMessages() {
+		if (getConfiguration() != null) {
+			return getConfiguration().getMessages();
 		}
 		
 		return null;

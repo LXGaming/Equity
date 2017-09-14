@@ -19,6 +19,10 @@ package nz.co.lolnet.equity.managers;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.ObjectUtils;
 
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.AbstractPacket;
@@ -26,10 +30,14 @@ import nz.co.lolnet.equity.entries.Connection.ConnectionState;
 import nz.co.lolnet.equity.entries.Packet.PacketDirection;
 import nz.co.lolnet.equity.entries.PacketData;
 import nz.co.lolnet.equity.entries.ProxyMessage;
+import nz.co.lolnet.equity.packets.CPacketEncryptionResponse;
 import nz.co.lolnet.equity.packets.CPacketHandshake;
 import nz.co.lolnet.equity.packets.CPacketLoginStart;
 import nz.co.lolnet.equity.packets.CPacketPing;
 import nz.co.lolnet.equity.packets.CPacketServerInfo;
+import nz.co.lolnet.equity.packets.SPacketDisconnect;
+import nz.co.lolnet.equity.packets.SPacketEncryptionRequest;
+import nz.co.lolnet.equity.packets.SPacketLoginSuccess;
 import nz.co.lolnet.equity.packets.SPacketPong;
 import nz.co.lolnet.equity.packets.SPacketServerInfo;
 
@@ -43,11 +51,15 @@ public class PacketManager {
 	
 	public void registerPackets() {
 		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.HANDSHAKE, PacketDirection.SERVERBOUND), CPacketHandshake.class);
-		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.LOGIN, PacketDirection.SERVERBOUND), CPacketLoginStart.class);
-		getRegisteredPackets().put(new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.SERVERBOUND), CPacketPing.class);
 		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.STATUS, PacketDirection.SERVERBOUND), CPacketServerInfo.class);
-		getRegisteredPackets().put(new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND), SPacketPong.class);
 		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND), SPacketServerInfo.class);
+		getRegisteredPackets().put(new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.SERVERBOUND), CPacketPing.class);
+		getRegisteredPackets().put(new PacketData(1, 0, ConnectionState.STATUS, PacketDirection.CLIENTBOUND), SPacketPong.class);
+		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.LOGIN, PacketDirection.CLIENTBOUND), SPacketDisconnect.class);
+		getRegisteredPackets().put(new PacketData(0, 0, ConnectionState.LOGIN, PacketDirection.SERVERBOUND), CPacketLoginStart.class);
+		getRegisteredPackets().put(new PacketData(1, 0, ConnectionState.LOGIN, PacketDirection.CLIENTBOUND), SPacketEncryptionRequest.class);
+		getRegisteredPackets().put(new PacketData(1, 0, ConnectionState.LOGIN, PacketDirection.SERVERBOUND), CPacketEncryptionResponse.class);
+		getRegisteredPackets().put(new PacketData(2, 0, ConnectionState.LOGIN, PacketDirection.CLIENTBOUND), SPacketLoginSuccess.class);
 	}
 	
 	public void processProxyMessage(ProxyMessage proxyMessage, PacketDirection packetDirection) {
@@ -62,7 +74,10 @@ public class PacketManager {
 			
 			proxyMessage.getPacket().getByteBuf().markReaderIndex();
 			int packetId = proxyMessage.getPacket().readVarInt();
-			AbstractPacket abstractPacket = getPacket(proxyMessage.getConnection().createPacketData(packetId, packetDirection));
+			
+			AbstractPacket abstractPacket = getPacket(
+					new PacketData(packetId, proxyMessage.getConnection().getProtocolVersion(), proxyMessage.getConnection().getConnectionState(), packetDirection));
+			
 			if (abstractPacket == null) {
 				proxyMessage.getPacket().getByteBuf().resetReaderIndex();
 				return;
@@ -91,6 +106,14 @@ public class PacketManager {
 			Equity.getInstance().getLogger().error("Encountered an error processing {}::getPacket", getClass().getSimpleName(), ex);
 			return null;
 		}
+	}
+	
+	public Optional<Integer> getPacketId(Class<? extends AbstractPacket> abstractPacketClass, int protocolVersion) {
+		Map<Integer, Integer> packetMap = getRegisteredPackets().entrySet().stream()
+				.filter(entry -> ObjectUtils.allNotNull(entry, entry.getKey(), entry.getValue()))
+				.filter(entry -> Objects.equals(entry.getValue(), abstractPacketClass))
+				.collect(Collectors.toMap(entry -> entry.getKey().getProtocolVersion(), entry -> entry.getKey().getPacketId()));
+		return Optional.ofNullable(packetMap.getOrDefault(protocolVersion, packetMap.get(0)));
 	}
 	
 	public Map<PacketData, Class<? extends AbstractPacket>> getRegisteredPackets() {

@@ -16,33 +16,14 @@
 
 package nz.co.lolnet.equity.packets;
 
-import java.util.Objects;
-
 import nz.co.lolnet.equity.entries.AbstractPacket;
 import nz.co.lolnet.equity.entries.ProxyMessage;
-import nz.co.lolnet.equity.entries.ServerMessage;
+import nz.co.lolnet.equity.entries.Connection.ConnectionState;
 
-public class SPacketServerInfo extends AbstractPacket {
-	
-	private ServerMessage serverPing;
+public class SPacketLoginSuccess extends AbstractPacket {
 	
 	@Override
 	public void read(ProxyMessage proxyMessage) {
-	}
-	
-	@Override
-	public void write(ProxyMessage proxyMessage) throws RuntimeException {
-		Objects.requireNonNull(getServerPing());
-		writePacketId(proxyMessage);
-		proxyMessage.getPacket().writeString(getServerPing().toString());
-		proxyMessage.getConnection().getClientChannel().writeAndFlush(proxyMessage);
-	}
-	
-	public ServerMessage getServerPing() {
-		return serverPing;
-	}
-	
-	public void setServerPing(ServerMessage serverPing) {
-		this.serverPing = serverPing;
+		proxyMessage.getConnection().setConnectionState(ConnectionState.PLAY);
 	}
 }

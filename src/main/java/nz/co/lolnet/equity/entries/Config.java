@@ -36,7 +36,7 @@ public class Config {
 		setPort(25565);
 		setNativeTransport(true);
 		setProxyProtocol(false);
-		setIPForward(false);
+		setIpForward(false);
 		setMaxThreads(0);
 		setConnectTimeout(2500);
 		setShutdownTimeout(30000);
@@ -71,15 +71,15 @@ public class Config {
 		return proxyProtocol;
 	}
 	
-	public void setProxyProtocol(boolean proxyProtocol) {
+	private void setProxyProtocol(boolean proxyProtocol) {
 		this.proxyProtocol = proxyProtocol;
 	}
 	
-	public boolean isIPForward() {
+	public boolean isIpForward() {
 		return ipForward;
 	}
 	
-	public void setIPForward(boolean ipForward) {
+	private void setIpForward(boolean ipForward) {
 		this.ipForward = ipForward;
 	}
 	

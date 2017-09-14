@@ -23,7 +23,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import io.netty.channel.Channel;
-import nz.co.lolnet.equity.entries.Packet.PacketDirection;
 import nz.co.lolnet.equity.util.EquityUtil;
 
 public class Connection {
@@ -72,10 +71,6 @@ public class Connection {
 		}
 		
 		return null;
-	}
-	
-	public PacketData createPacketData(int packetId, PacketDirection packetDirection) {
-		return new PacketData(packetId, getProtocolVersion(), getConnectionState(), packetDirection);
 	}
 	
 	public List<Object> getPacketQueue() {

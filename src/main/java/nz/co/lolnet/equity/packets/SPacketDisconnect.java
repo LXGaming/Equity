@@ -18,31 +18,34 @@ package nz.co.lolnet.equity.packets;
 
 import java.util.Objects;
 
+import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.AbstractPacket;
 import nz.co.lolnet.equity.entries.ProxyMessage;
-import nz.co.lolnet.equity.entries.ServerMessage;
+import nz.co.lolnet.equity.text.Text;
 
-public class SPacketServerInfo extends AbstractPacket {
+public class SPacketDisconnect extends AbstractPacket {
 	
-	private ServerMessage serverPing;
+	private Text reason;
 	
 	@Override
 	public void read(ProxyMessage proxyMessage) {
+		setReason(Text.builder().append(Text.of(proxyMessage.getPacket().readString())).build());
+		Equity.getInstance().getLogger().info("{} -> DISCONNECT {}", proxyMessage.getConnection().getIdentity(), getReason());
 	}
 	
 	@Override
 	public void write(ProxyMessage proxyMessage) throws RuntimeException {
-		Objects.requireNonNull(getServerPing());
+		Objects.requireNonNull(getReason());
 		writePacketId(proxyMessage);
-		proxyMessage.getPacket().writeString(getServerPing().toString());
+		proxyMessage.getPacket().writeString(getReason().toString());
 		proxyMessage.getConnection().getClientChannel().writeAndFlush(proxyMessage);
 	}
 	
-	public ServerMessage getServerPing() {
-		return serverPing;
+	public Text getReason() {
+		return reason;
 	}
 	
-	public void setServerPing(ServerMessage serverPing) {
-		this.serverPing = serverPing;
+	public void setReason(Text reason) {
+		this.reason = reason;
 	}
 }

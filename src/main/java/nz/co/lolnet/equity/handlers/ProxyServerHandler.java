@@ -42,7 +42,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
-		if (connection == null || connection.getConnectionState() == null) {
+		if (connection == null || connection.getConnectionState() == null || !connection.isActive()) {
 			throw new IllegalStateException(getConnectionSide().toString() + " Connection error!");
 		}
 		
@@ -54,7 +54,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 				throw new IllegalStateException(getConnectionSide().getChannelSide() + " Channel does not exist!");
 			}
 			
-			channel.writeAndFlush(new ProxyMessage(proxyMessage.getPacket())).addListener(EquityUtil.getFutureListener(ctx.channel()));
+			channel.writeAndFlush(proxyMessage).addListener(EquityUtil.getFutureListener(ctx.channel()));
 			return;
 		}
 		
@@ -64,15 +64,12 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) {
 		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
-		if (Equity.getInstance() != null && Equity.getInstance().getConnectionManager() != null && connection != null) {
-			Equity.getInstance().getConnectionManager().removeConnection(connection);
-		}
+		Equity.getInstance().getConnectionManager().removeConnection(connection);
 	}
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
 		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
-		throwable.printStackTrace();
 	}
 	
 	public ConnectionSide getConnectionSide() {

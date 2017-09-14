@@ -257,15 +257,15 @@ public class ProxyHAProxyMessageDecoder extends ByteToMessageDecoder {
                 }
                 
                 Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
-                if (connection != null && connection.getPacketQueue() != null && Equity.getInstance().getConfig() != null && Equity.getInstance().getConfig().isIPForward()) {
+                if (connection != null && connection.isActive() && Equity.getInstance().getConfig() != null && Equity.getInstance().getConfig().isIpForward()) {
                 	int length = in.readerIndex();
                 	in.readerIndex(0);
                 	if (in.hasMemoryAddress()) {
-                		connection.getPacketQueue().add(in.slice(0, length).retain());
+                		Equity.getInstance().getConnectionManager().addPacketQueue(connection, in.slice(0, length).retain());
                 	} else {
                 		ByteBuf byteBuf = ctx.alloc().directBuffer(length);
                 		in.readBytes(byteBuf, length);
-                		connection.getPacketQueue().add(byteBuf);
+                		Equity.getInstance().getConnectionManager().addPacketQueue(connection, byteBuf);
                 	}
                 	
                 	in.readerIndex(length);

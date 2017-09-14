@@ -19,13 +19,18 @@ package nz.co.lolnet.equity.managers;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
-import nz.co.lolnet.equity.entries.Packet;
+import nz.co.lolnet.equity.entries.Connection.ConnectionState;
 import nz.co.lolnet.equity.entries.ProxyMessage;
+import nz.co.lolnet.equity.entries.ServerMessage;
+import nz.co.lolnet.equity.packets.SPacketDisconnect;
+import nz.co.lolnet.equity.packets.SPacketServerInfo;
+import nz.co.lolnet.equity.text.Text;
 import nz.co.lolnet.equity.util.EquityUtil;
 
 public class ConnectionManager {
@@ -37,11 +42,7 @@ public class ConnectionManager {
 	}
 	
 	public void addConnection(Connection connection) {
-		if (getConnections() == null || connection == null) {
-			return;
-		}
-		
-		if (Equity.getInstance().getProxyManager() == null || !Equity.getInstance().isRunning()) {
+		if (connection == null || getConnections() == null || !Equity.getInstance().isRunning()) {
 			return;
 		}
 		
@@ -49,8 +50,8 @@ public class ConnectionManager {
 		Equity.getInstance().getLogger().info("{} -> Connected", connection.getIdentity());
 	}
 	
-	public void addPacket(Connection connection, Packet packet) {
-		if (connection == null || packet == null || connection.getPacketQueue() == null) {
+	public void addPacketQueue(Connection connection, Object object) {
+		if (connection == null || object == null || connection.getPacketQueue() == null) {
 			return;
 		}
 		
@@ -60,7 +61,7 @@ public class ConnectionManager {
 			return;
 		}
 		
-		connection.getPacketQueue().add(packet);
+		connection.getPacketQueue().add(object);
 	}
 	
 	public void setSocketAddress(Connection connection, SocketAddress socketAddress) {
@@ -72,8 +73,33 @@ public class ConnectionManager {
 		Equity.getInstance().getLogger().info("{} -> PROXY {}", EquityUtil.getAddress(connection.getClientChannel().localAddress()), EquityUtil.getAddress(connection.getAddress()));
 	}
 	
+	public void disconnect(Connection connection, Text description) {
+		if (connection == null || description == null || connection.getClientChannel() == null) {
+			removeConnection(connection);
+			return;
+		}
+		
+		ServerMessage serverMessage = new ServerMessage();
+		serverMessage.getVersion().setProtocol(connection.getProtocolVersion());
+		serverMessage.setDescription(description);
+		
+		if (Objects.equals(connection.getConnectionState(), ConnectionState.STATUS)) {
+			SPacketServerInfo serverInfo = new SPacketServerInfo();
+			serverInfo.setServerPing(serverMessage);
+			serverInfo.write(new ProxyMessage(connection));
+		}
+		
+		if (Objects.equals(connection.getConnectionState(), ConnectionState.LOGIN)) {
+			SPacketDisconnect disconnect = new SPacketDisconnect();
+			disconnect.setReason(serverMessage.getDescription());
+			disconnect.write(new ProxyMessage(connection));
+		}
+		
+		removeConnection(connection);
+	}
+	
 	public void removeConnection(Connection connection) {
-		if (getConnections() == null || connection == null || !getConnections().remove(connection)) {
+		if (connection == null || getConnections() == null || !getConnections().remove(connection)) {
 			return;
 		}
 		

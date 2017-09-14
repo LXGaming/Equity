@@ -16,6 +16,11 @@
 
 package nz.co.lolnet.equity.entries;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import nz.co.lolnet.equity.Equity;
+
 public abstract class AbstractPacket {
 	
 	public void read(ProxyMessage proxyMessage) {
@@ -24,5 +29,20 @@ public abstract class AbstractPacket {
 	
 	public void write(ProxyMessage proxyMessage) {
 		throw new UnsupportedOperationException("Packet must implement write method!");
+	}
+	
+	protected void writePacketId(ProxyMessage proxyMessage) throws IllegalStateException, NullPointerException {
+		Objects.requireNonNull(proxyMessage);
+		if (!proxyMessage.isValid()) {
+			throw new IllegalStateException("ProxyMessage is invalid");
+		}
+		
+		Optional<Integer> packetId = Equity.getInstance().getPacketManager().getPacketId(getClass(), proxyMessage.getConnection().getProtocolVersion());
+		if (packetId.isPresent()) {
+			proxyMessage.getPacket().writeVarInt(packetId.get());
+			return;
+		}
+		
+		throw new IllegalStateException("Failed to writePacketId");
 	}
 }

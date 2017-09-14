@@ -39,6 +39,8 @@ import io.netty.util.concurrent.GenericFutureListener;
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Packet;
+import nz.co.lolnet.equity.text.Text;
+import nz.co.lolnet.equity.text.format.TextColors;
 
 public class EquityUtil {
 	
@@ -60,6 +62,10 @@ public class EquityUtil {
 		lines.add(0, String.join("", Collections.nCopies(length, "-")));
 		lines.add(String.join("", Collections.nCopies(length, "-")));
 		return lines;
+	}
+	
+	public static Text.Builder getTextPrefix() {
+		return Text.builder().append(Text.of("[" + Reference.APP_NAME + "] ").color(TextColors.BLUE).bold(true).build());
 	}
 	
 	public static GenericFutureListener<? extends Future<? super Void>> getFutureListener(Channel channel) {

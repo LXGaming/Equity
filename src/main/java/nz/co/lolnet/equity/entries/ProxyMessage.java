@@ -21,8 +21,8 @@ public class ProxyMessage {
 	private final Connection connection;
 	private final Packet packet;
 	
-	public ProxyMessage(Packet packet) {
-		this(null, packet);
+	public ProxyMessage(Connection connection) {
+		this(connection, new Packet());
 	}
 	
 	public ProxyMessage(Connection connection, Packet packet) {

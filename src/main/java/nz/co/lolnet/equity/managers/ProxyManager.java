@@ -22,8 +22,8 @@ import java.net.Socket;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -83,10 +83,16 @@ public class ProxyManager {
 				throw new IllegalArgumentException("Required arguments are invalid!");
 			}
 			
+			if (!isProtocolSupported(connection.getProtocolVersion())) {
+				Equity.getInstance().getLogger().warn("Failed to find server handling protocol {}", connection.getProtocolVersion());
+				Equity.getInstance().getConnectionManager().disconnect(connection, Equity.getInstance().getMessages().getUnsupported());
+				return;
+			}
+			
 			Server server = getServer(connection.getProtocolVersion());
 			if (server == null) {
 				Equity.getInstance().getLogger().warn("Failed to find server handling protocol {}", connection.getProtocolVersion());
-				Equity.getInstance().getConnectionManager().removeConnection(connection);
+				Equity.getInstance().getConnectionManager().disconnect(connection, Equity.getInstance().getMessages().getUnavailable());
 				return;
 			}
 			
@@ -109,7 +115,7 @@ public class ProxyManager {
 					
 					Equity.getInstance().getConnectionManager().clearPacketQueue(connection);
 				} else {
-					Equity.getInstance().getConnectionManager().removeConnection(connection);
+					Equity.getInstance().getConnectionManager().disconnect(connection, Equity.getInstance().getMessages().getError());
 				}
 			});
 		} catch (RuntimeException ex) {
@@ -119,22 +125,26 @@ public class ProxyManager {
 	}
 	
 	private Server getServer(int protocolVersion) {
-		List<Server> servers = new ArrayList<Server>();
-		for (Server server : Equity.getInstance().getConfig().getServers()) {
-			if (server == null || StringUtils.isBlank(server.getHost()) || server.getProtocolVersions() == null) {
-				continue;
-			}
-			
-			if (server.getProtocolVersions().contains(protocolVersion) && isAvailable(server.getIdentity(), server.getHost(), server.getPort())) {
-				servers.add(server);
-			}
-		}
+		List<Server> servers = Equity.getInstance().getConfig().getServers().stream()
+				.filter(Objects::nonNull)
+				.filter(server -> Objects.nonNull(server.getProtocolVersions()))
+				.filter(server -> server.getProtocolVersions().contains(protocolVersion))
+				.filter(server -> isAvailable(server.getIdentity(), server.getHost(), server.getPort()))
+				.collect(Collectors.toCollection(ArrayList::new));
 		
-		if (servers != null && !servers.isEmpty()) {
+		if (!servers.isEmpty()) {
 			return servers.get(new SecureRandom().nextInt(servers.size()));
 		}
 		
 		return null;
+	}
+	
+	private boolean isProtocolSupported(int protocolVersion) {
+		return Equity.getInstance().getConfig().getServers().stream()
+				.filter(Objects::nonNull)
+				.map(server -> server.getProtocolVersions())
+				.filter(Objects::nonNull)
+				.anyMatch(supportedProtocols -> supportedProtocols.contains(protocolVersion));
 	}
 	
 	private boolean isAvailable(String identity, String host, int port) {

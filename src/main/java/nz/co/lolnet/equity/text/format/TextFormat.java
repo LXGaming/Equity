@@ -14,14 +14,29 @@
  * limitations under the License.
  */
 
-package nz.co.lolnet.equity.util;
+package nz.co.lolnet.equity.text.format;
 
-public class Reference {
+public abstract class TextFormat {
 	
-	public static final String APP_ID = "equity";
-	public static final String APP_NAME = "Equity";
-	public static final String APP_VERSION = "1.3.0";
-	public static final String AUTHORS = "LX_Gaming";
-	public static final String SOURCE = "https://github.com/lolnetnz/Equity";
-	public static final String WEBSITE = "https://www.lolnet.co.nz";
+	private final String id;
+	private final String name;
+	private final String code;
+	
+	public TextFormat(String id, String name, String code) {
+		this.id = id;
+		this.name = name;
+		this.code = code;
+	}
+	
+	public String getId() {
+		return id;
+	}
+	
+	public String getName() {
+		return name;
+	}
+	
+	public String getCode() {
+		return code;
+	}
 }

@@ -19,8 +19,6 @@ package nz.co.lolnet.equity.handlers;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import nz.co.lolnet.equity.Equity;
@@ -38,16 +36,12 @@ public class ProxyLegacyHandler extends ByteToMessageDecoder {
 	
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
-		if (connection == null || connection.getConnectionState() == null) {
-			throw new IllegalStateException(getConnectionSide().toString() + " Connection error!");
-		}
-		
 		if (!in.isReadable()) {
 			return;
 		}
 		
-		if (!connection.isActive()) {
+		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
+		if (connection == null || connection.getConnectionState() == null || !connection.isActive()) {
 			in.skipBytes(in.readableBytes());
 			return;
 		}
@@ -56,12 +50,13 @@ public class ProxyLegacyHandler extends ByteToMessageDecoder {
 		short packetId = in.readUnsignedByte();
 		if (packetId == 254 && in.isReadable() && in.readUnsignedByte() == 1) {
 			in.skipBytes(in.readableBytes());
+			Equity.getInstance().getConnectionManager().removeConnection(connection);
 			return;
 		}
 		
 		if (packetId == 2 && in.isReadable()) {
 			in.skipBytes(in.readableBytes());
-			connection.getClientChannel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+			Equity.getInstance().getConnectionManager().removeConnection(connection);
 			return;
 		}
 		
@@ -72,7 +67,6 @@ public class ProxyLegacyHandler extends ByteToMessageDecoder {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
 		Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
-		throwable.printStackTrace();
 	}
 	
 	public ConnectionSide getConnectionSide() {

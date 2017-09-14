@@ -29,12 +29,14 @@ import com.google.gson.JsonParseException;
 
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Config;
+import nz.co.lolnet.equity.entries.Messages;
 import nz.co.lolnet.equity.util.EquityUtil;
 
 public class Configuration {
 	
 	private final Path path;
 	private Config config;
+	private Messages messages;
 	
 	public Configuration(Path path) {
 		this.path = path;
@@ -42,11 +44,13 @@ public class Configuration {
 	
 	public void loadConfiguration() {
 		setConfig((Config) loadObject(new Config(), "config.json"));
+		setMessages((Messages) loadObject(new Messages(), "messages.json"));
 		Equity.getInstance().getLogger().info("Loaded configuration files.");
 	}
 	
 	public void saveConfiguration() {
 		saveObject(getConfig(), "config.json");
+		saveObject(getMessages(), "messages.json");
 		Equity.getInstance().getLogger().info("Saved configuration files.");
 	}
 	
@@ -125,5 +129,13 @@ public class Configuration {
 	
 	private void setConfig(Config config) {
 		this.config = config;
+	}
+	
+	public Messages getMessages() {
+		return messages;
+	}
+	
+	private void setMessages(Messages messages) {
+		this.messages = messages;
 	}
 }

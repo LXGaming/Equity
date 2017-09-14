@@ -42,11 +42,7 @@ public class ProxyDecodingHandler extends ByteToMessageDecoder {
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 		Connection connection = ctx.channel().attr(EquityUtil.getAttributeKey()).get();
-		if (connection == null || connection.getConnectionState() == null) {
-			throw new IllegalStateException(getConnectionSide().toString() + " Connection error!");
-		}
-		
-		if (!connection.isActive()) {
+		if (connection == null || connection.getConnectionState() == null || !connection.isActive()) {
 			in.skipBytes(in.readableBytes());
 			return;
 		}
