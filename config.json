@@ -1,0 +1,30 @@
+{
+  "debug": false,
+  "port": 25500,
+  "nativeTransport": true,
+  "proxyProtocol": false,
+  "ipForward": false,
+  "maxThreads": 0,
+  "connectTimeout": 2500,
+  "shutdownTimeout": 30000,
+  "servers": [
+    {
+      "name": "localhost",
+      "host": "10.0.0.3",
+      "port": 25577,
+      "timeout": 2000,
+      "versions": [
+        340,
+        335,
+        316,
+        315,
+        210,
+        110,
+        109,
+        108,
+        107,
+        47
+      ]
+    }
+  ]
+}

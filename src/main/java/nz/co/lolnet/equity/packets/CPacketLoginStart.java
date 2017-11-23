@@ -1,12 +1,12 @@
 /*
  * Copyright 2017 lolnet.co.nz
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,26 +17,28 @@
 package nz.co.lolnet.equity.packets;
 
 import nz.co.lolnet.equity.Equity;
-import nz.co.lolnet.equity.entries.AbstractPacket;
 import nz.co.lolnet.equity.entries.ProxyMessage;
 import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.PacketUtil;
 
 public class CPacketLoginStart extends AbstractPacket {
-	
-	private String username;
-	
-	@Override
-	public void read(ProxyMessage proxyMessage) {
-		setUsername(proxyMessage.getPacket().readString());
-		proxyMessage.getConnection().setUsername(getUsername());
-		Equity.getInstance().getLogger().info("{} -> LOGIN {}", EquityUtil.getAddress(proxyMessage.getConnection().getAddress()), getUsername());
-	}
-	
-	public String getUsername() {
-		return username;
-	}
-	
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    
+    private String username;
+    
+    @Override
+    public void read(ProxyMessage proxyMessage) {
+        setUsername(PacketUtil.readString(proxyMessage.getByteBuf()));
+        proxyMessage.getConnection().setUsername(getUsername());
+        proxyMessage.getConnection().getAddress().ifPresent(address -> {
+            Equity.getInstance().getLogger().info("{} -> LOGIN {}", EquityUtil.getAddress(address), getUsername());
+        });
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public void setUsername(String username) {
+        this.username = username;
+    }
 }

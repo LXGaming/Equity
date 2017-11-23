@@ -1,12 +1,12 @@
 /*
  * Copyright 2017 lolnet.co.nz
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,132 +16,142 @@
 
 package nz.co.lolnet.equity.util;
 
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.ThreadFactory;
-
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
-import nz.co.lolnet.equity.entries.Packet;
 import nz.co.lolnet.equity.text.Text;
 import nz.co.lolnet.equity.text.format.TextColors;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class EquityUtil {
-	
-	public static ThreadFactory getThreadFactory(String namingPattern) {
-		return new BasicThreadFactory.Builder()
-				.namingPattern(namingPattern)
-				.daemon(true)
-				.priority(Thread.NORM_PRIORITY)
-				.build();
-	}
-	
-	public static List<String> getApplicationInformation() {
-		List<String> lines = new ArrayList<String>();
-		lines.add(Reference.APP_NAME + " v" + Reference.APP_VERSION);
-		lines.add("  Authors: " + String.join(", ", Reference.AUTHORS));
-		lines.add("  Source: " + Reference.SOURCE);
-		lines.add("  Website: " + Reference.WEBSITE);
-		int length = Collections.max(lines, Comparator.comparingInt(String::length)).length();
-		lines.add(0, String.join("", Collections.nCopies(length, "-")));
-		lines.add(String.join("", Collections.nCopies(length, "-")));
-		return lines;
-	}
-	
-	public static Text.Builder getTextPrefix() {
-		return Text.builder().append(Text.of("[" + Reference.APP_NAME + "] ").color(TextColors.BLUE).bold(true).build());
-	}
-	
-	public static GenericFutureListener<? extends Future<? super Void>> getFutureListener(Channel channel) {
-		return future -> {
-			if (future.isDone() && future.isSuccess()) {
-				channel.read();
-			} else {
-				channel.close();
-			}
-		};
-	}
-	
-	public static Packet getPacket(ByteBufAllocator byteBufAllocator, ByteBuf byteBuf, int length) {
-		Packet packet = new Packet(Unpooled.EMPTY_BUFFER);
-		if (byteBuf.hasMemoryAddress()) {
-			packet = new Packet(byteBuf.slice(byteBuf.readerIndex(), length).retain());
-			byteBuf.skipBytes(length);
-		} else {
-			ByteBuf directBuffer = byteBufAllocator.directBuffer(length);
-			byteBuf.readBytes(directBuffer);
-			packet = new Packet(directBuffer);
-		}
-		
-		return packet;
-	}
-	
-	public static boolean safeRelease(ByteBuf byteBuf) {
-		try {
-			if (byteBuf == null) {
-				throw new IllegalArgumentException("Supplied arguments are null!");
-			}
-			
-			if (byteBuf.refCnt() > 0) {
-				byteBuf.release(byteBuf.refCnt());
-			}
-			
-			return true;
-		} catch (RuntimeException ex) {
-			Equity.getInstance().getLogger().error("Encountered an error processing EquityUtil::safeRelease", ex);
-		}
-		
-		return false;
-	}
-	
-	public static Gson getGsonWithTypeAdapter(Object object) {
-		GsonBuilder gsonBuilder = new GsonBuilder();
-		if (object != null) {
-			gsonBuilder.registerTypeAdapter(object.getClass(), new TypeAdapter(object));
-		}
-		
-		return gsonBuilder.setPrettyPrinting().create();
-	}
-	
-	public static AttributeKey<Connection> getAttributeKey() {
-		return AttributeKey.valueOf("CONNECTION");
-	}
-	
-	public static String getAddress(SocketAddress socketAddress) {
-		return getHost(socketAddress) + ":" + getPort(socketAddress);
-	}
-	
-	public static String getHost(SocketAddress socketAddress) {
-		if (socketAddress != null && socketAddress instanceof InetSocketAddress) {
-			InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
-			return inetSocketAddress.getHostString();
-		}
-		
-		return "UNKNOWN";
-	}
-	
-	public static int getPort(SocketAddress socketAddress) {
-		if (socketAddress != null && socketAddress instanceof InetSocketAddress) {
-			InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
-			return inetSocketAddress.getPort();
-		}
-		
-		return 0;
-	}
+    
+    public static Text.Builder getTextPrefix() {
+        return Text.builder().append(Text.of("[" + Reference.APP_NAME + "] ").color(TextColors.BLUE).bold(true).build());
+    }
+    
+    public static GenericFutureListener<? extends Future<? super Void>> getFutureListener(Channel channel) {
+        return future -> {
+            if (future.isDone() && future.isSuccess()) {
+                channel.read();
+            } else {
+                channel.close();
+            }
+        };
+    }
+    
+    public static AttributeKey<Connection> getConnectionKey() {
+        return AttributeKey.valueOf("PROXY_CONNECTION");
+    }
+    
+    public static AttributeKey<String> getSideKey() {
+        return AttributeKey.valueOf("PROXY_SIDE");
+    }
+    
+    public static String getAddress(SocketAddress socketAddress) {
+        return getHost(socketAddress).orElse("Unknown") + ":" + getPort(socketAddress).orElse(0);
+    }
+    
+    public static Optional<String> getHost(SocketAddress socketAddress) {
+        if (socketAddress instanceof InetSocketAddress) {
+            InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
+            return Optional.of(inetSocketAddress.getHostString());
+        }
+        
+        return Optional.empty();
+    }
+    
+    public static Optional<Integer> getPort(SocketAddress socketAddress) {
+        if (socketAddress instanceof InetSocketAddress) {
+            InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
+            return Optional.of(inetSocketAddress.getPort());
+        }
+        
+        return Optional.empty();
+    }
+    
+    /**
+     * Removes non-printable characters (excluding new line and carriage return) in the provided {@link java.lang.String String}.
+     *
+     * @param string The {@link java.lang.String String} to filter.
+     * @return The filtered {@link java.lang.String String}.
+     */
+    public static String filter(String string) {
+        return StringUtils.replaceAll(string, "[^\\x20-\\x7E\\x0A\\x0D]", "");
+    }
+    
+    public static String getTimeStringFromSeconds(long time) {
+        time = Math.abs(time);
+        long second = time % 60;
+        long minute = (time / 60) % 60;
+        long hour = (time / 3600) % 24;
+        long day = time / 86400;
+        
+        StringBuilder stringBuilder = new StringBuilder();
+        appendUnit(stringBuilder, day, "day", "days");
+        appendUnit(stringBuilder, hour, "hour", "hours");
+        appendUnit(stringBuilder, minute, "minute", "minutes");
+        appendUnit(stringBuilder, second, "second", "seconds");
+        return stringBuilder.toString();
+    }
+    
+    public static StringBuilder appendUnit(StringBuilder stringBuilder, long unit, String singular, String plural) {
+        if (unit > 0) {
+            if (stringBuilder.length() > 0) {
+                stringBuilder.append(", ");
+            }
+            
+            stringBuilder.append(unit).append(" ");
+            if (unit == 1) {
+                stringBuilder.append(singular);
+            } else {
+                stringBuilder.append(plural);
+            }
+        }
+        
+        return stringBuilder;
+    }
+    
+    public static Duration getDuration(Instant instant) {
+        return Duration.between(instant, Instant.now());
+    }
+    
+    public static ThreadFactory buildThreadFactory(String namingPattern) {
+        return new BasicThreadFactory.Builder().namingPattern(namingPattern).daemon(true).priority(Thread.NORM_PRIORITY).build();
+    }
+    
+    public static Optional<Path> getPath() {
+        String userDir = System.getProperty("user.dir");
+        if (StringUtils.isNotBlank(userDir)) {
+            return Optional.of(Paths.get(userDir));
+        }
+        
+        return Optional.empty();
+    }
+    
+    @SafeVarargs
+    public static <E> ArrayList<E> newArrayList(E... elements) throws NullPointerException {
+        Objects.requireNonNull(elements);
+        return Stream.of(elements).collect(Collectors.toCollection(ArrayList::new));
+    }
+    
+    public static <K, V> HashMap<K, V> newHashMap() {
+        return new HashMap<K, V>();
+    }
 }

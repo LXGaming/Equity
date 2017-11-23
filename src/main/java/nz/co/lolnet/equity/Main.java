@@ -1,12 +1,12 @@
 /*
  * Copyright 2017 lolnet.co.nz
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,10 +16,28 @@
 
 package nz.co.lolnet.equity;
 
+import nz.co.lolnet.equity.configuration.Config;
+import nz.co.lolnet.equity.managers.CommandManager;
+import nz.co.lolnet.equity.util.Reference;
+import nz.co.lolnet.equity.util.TerminalConsoleAppender;
+
+import java.util.Optional;
+
 public class Main {
-	
-	public static void main(String[] args) {
-		Equity equity = new Equity();
-		equity.loadEquity();
-	}
+    
+    public static void main(String[] args) {
+        Thread.currentThread().setName("Main Thread");
+        Equity equity = new Equity();
+        equity.loadEquity();
+        
+        TerminalConsoleAppender.buildTerminal(Reference.APP_NAME, equity.getConfig().map(Config::isJlineOverride).orElse(true));
+        while (equity.isRunning()) {
+            Optional<String> line = TerminalConsoleAppender.readline();
+            if (!line.isPresent()) {
+                continue;
+            }
+            
+            CommandManager.process(line.get());
+        }
+    }
 }

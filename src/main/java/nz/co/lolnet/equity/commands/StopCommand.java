@@ -14,24 +14,33 @@
  * limitations under the License.
  */
 
-package nz.co.lolnet.equity.packets;
+package nz.co.lolnet.equity.commands;
 
-import nz.co.lolnet.equity.entries.ProxyMessage;
+import nz.co.lolnet.equity.Equity;
+import nz.co.lolnet.equity.util.EquityUtil;
 
-public class SPacketPong extends AbstractPacket {
-    
-    private long clientTime;
+import java.util.List;
+
+public class StopCommand extends AbstractCommand {
     
     @Override
-    public void read(ProxyMessage proxyMessage) {
-        setClientTime(proxyMessage.getByteBuf().readLong());
+    public void execute(List<String> arguments) {
+        Equity.getInstance().getLogger().warn("Shutting down...");
+        Equity.getInstance().setRunning(false);
     }
     
-    public long getClientTime() {
-        return clientTime;
+    @Override
+    public String getName() {
+        return "Stop";
     }
     
-    public void setClientTime(long clientTime) {
-        this.clientTime = clientTime;
+    @Override
+    public String getDescription() {
+        return "Shuts down the Equity instance.";
+    }
+    
+    @Override
+    public List<String> getAliases() {
+        return EquityUtil.newArrayList("End");
     }
 }

@@ -14,15 +14,28 @@
  * limitations under the License.
  */
 
-package nz.co.lolnet.equity.packets;
+package nz.co.lolnet.equity.commands;
 
-import nz.co.lolnet.equity.entries.Protocol;
-import nz.co.lolnet.equity.entries.ProxyMessage;
+import nz.co.lolnet.equity.Equity;
 
-public class SPacketEncryptionRequest extends AbstractPacket {
+import java.util.List;
+
+public class ReloadCommand extends AbstractCommand {
     
     @Override
-    public void read(ProxyMessage proxyMessage) {
-        proxyMessage.getConnection().setState(Protocol.State.PLAY);
+    public void execute(List<String> arguments) {
+        Equity.getInstance().getConfiguration().loadConfiguration();
+        Equity.getInstance().reloadLogger();
+        Equity.getInstance().getLogger().info("Reloaded");
+    }
+    
+    @Override
+    public String getName() {
+        return "Reload";
+    }
+    
+    @Override
+    public String getDescription() {
+        return "Reloads the Equity configuration.";
     }
 }

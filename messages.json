@@ -1,0 +1,56 @@
+{
+  "error": {
+    "extra": [
+      {
+        "text": "Lolnet is currently unavailable.",
+        "color": "blue",
+        "bold": true
+      },
+      {
+        "text": "\n"
+      },
+      {
+        "text": "An unexpected error occurred.",
+        "color": "dark_gray",
+        "italic": true
+      }
+    ],
+    "text": ""
+  },
+  "unavailable": {
+    "extra": [
+      {
+        "text": "Lolnet is currently unavailable.",
+        "color": "blue",
+        "bold": true
+      },
+      {
+        "text": "\n"
+      },
+      {
+        "text": "Please try again later.",
+        "color": "dark_gray",
+        "italic": true
+      }
+    ],
+    "text": ""
+  },
+  "unsupported": {
+    "extra": [
+      {
+        "text": "Lolnet is currently unavailable.",
+        "color": "blue",
+        "bold": true
+      },
+      {
+        "text": "\n"
+      },
+      {
+        "text": "Your client version is not supported.",
+        "color": "dark_gray",
+        "italic": true
+      }
+    ],
+    "text": ""
+  }
+}
