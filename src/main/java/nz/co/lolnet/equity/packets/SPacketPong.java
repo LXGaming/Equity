@@ -27,6 +27,13 @@ public class SPacketPong extends AbstractPacket {
         setClientTime(proxyMessage.getByteBuf().readLong());
     }
     
+    @Override
+    public void write(ProxyMessage proxyMessage) {
+        writePacketId(proxyMessage);
+        proxyMessage.getByteBuf().writeLong(getClientTime());
+        proxyMessage.getConnection().getClientChannel().writeAndFlush(proxyMessage);
+    }
+    
     public long getClientTime() {
         return clientTime;
     }

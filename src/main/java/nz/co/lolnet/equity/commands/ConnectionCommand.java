@@ -23,7 +23,7 @@ import nz.co.lolnet.equity.managers.ConnectionManager;
 import java.util.List;
 import java.util.Optional;
 
-public class KickCommand extends AbstractCommand {
+public class ConnectionCommand extends AbstractCommand {
     
     @Override
     public void execute(List<String> arguments) {
@@ -31,11 +31,18 @@ public class KickCommand extends AbstractCommand {
             Equity.getInstance().getLogger().info("Usage: {} {}", getName(), getUsage());
             return;
         }
-    
+        
         Optional<Connection> connection = ConnectionManager.getConnection(arguments.get(0));
         if (connection.isPresent() && connection.get().getIdentity().isPresent()) {
-            ConnectionManager.removeConnection(connection.get());
-            Equity.getInstance().getLogger().info("Kicked {}", connection.get().getIdentity().get());
+            Equity.getInstance().getLogger().info("===== Connection: {} =====", connection.get().getIdentity().get());
+            Equity.getInstance().getLogger().info("PacketQueue: {}", connection.get().getPacketQueue().size());
+            Equity.getInstance().getLogger().info("State: {}", connection.get().getState());
+            Equity.getInstance().getLogger().info("Client Channel: {}", connection.get().getClientChannel() != null);
+            Equity.getInstance().getLogger().info("Server Channel: {}", connection.get().getServerChannel() != null);
+            Equity.getInstance().getLogger().info("Version: {}", connection.get().getVersion());
+            Equity.getInstance().getLogger().info("Username: {}", connection.get().getUsername());
+            Equity.getInstance().getLogger().info("Server: {}", connection.get().getServer());
+            Equity.getInstance().getLogger().info("Active: {}", connection.get().isActive());
             return;
         }
         
@@ -44,12 +51,12 @@ public class KickCommand extends AbstractCommand {
     
     @Override
     public String getName() {
-        return "Kick";
+        return "Connection";
     }
     
     @Override
     public String getDescription() {
-        return "Forcibly disconnects a connection.";
+        return "Shows Connection information";
     }
     
     @Override

@@ -18,6 +18,7 @@ package nz.co.lolnet.equity.managers;
 
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.commands.AbstractCommand;
+import nz.co.lolnet.equity.commands.ConnectionCommand;
 import nz.co.lolnet.equity.commands.HelpCommand;
 import nz.co.lolnet.equity.commands.InfoCommand;
 import nz.co.lolnet.equity.commands.KickCommand;
@@ -32,9 +33,10 @@ import java.util.Optional;
 
 public class CommandManager {
     
-    public static final List<AbstractCommand> registeredCommands = EquityUtil.newArrayList();
+    private static final List<AbstractCommand> registeredCommands = EquityUtil.newArrayList();
     
     public static void buildCommands() {
+        getRegisteredCommands().add(new ConnectionCommand());
         getRegisteredCommands().add(new HelpCommand());
         getRegisteredCommands().add(new InfoCommand());
         getRegisteredCommands().add(new KickCommand());
@@ -56,7 +58,7 @@ public class CommandManager {
                 return;
             }
             
-            Equity.getInstance().getLogger().debug("Processing {}", command.get().getName());
+            Equity.getInstance().getLogger().info("Processing {}", command.get().getName());
             command.get().execute(arguments.get());
         } catch (Exception ex) {
             Equity.getInstance().getLogger().error("Encountered an error processing {}::process", "CommandManager", ex);

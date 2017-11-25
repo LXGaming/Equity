@@ -17,7 +17,6 @@
 package nz.co.lolnet.equity.commands;
 
 import nz.co.lolnet.equity.Equity;
-import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.managers.ConnectionManager;
 import nz.co.lolnet.equity.util.EquityUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -30,21 +29,20 @@ public class ListCommand extends AbstractCommand {
     @Override
     public void execute(List<String> arguments) {
         Map<String, List<String>> servers = EquityUtil.newHashMap();
-        int totalConnections = 0;
-        for (Connection connection : ConnectionManager.getConnections()) {
-            connection.getIdentity().ifPresent(identity -> {
-                servers.putIfAbsent(connection.getServer(), EquityUtil.newArrayList());
-                servers.get(connection.getServer()).add(identity);
-            });
-    
-            totalConnections++;
-        }
+        ConnectionManager.getConnections().forEach(connection -> {
+            if (!connection.getIdentity().isPresent()) {
+                return;
+            }
+            
+            servers.putIfAbsent(connection.getServer(), EquityUtil.newArrayList());
+            servers.get(connection.getServer()).add(connection.getIdentity().get());
+        });
         
         servers.forEach((key, value) -> Equity.getInstance().getLogger().info("[{}] ({}): {}", key, value.size(), StringUtils.join(value, ", ")));
         if (servers.size() == 1) {
-            Equity.getInstance().getLogger().info("{} active connection", totalConnections);
+            Equity.getInstance().getLogger().info("{} active connection", ConnectionManager.getConnections().size());
         } else {
-            Equity.getInstance().getLogger().info("{} active connections", totalConnections);
+            Equity.getInstance().getLogger().info("{} active connections", ConnectionManager.getConnections().size());
         }
     }
     

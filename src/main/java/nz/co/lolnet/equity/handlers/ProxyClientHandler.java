@@ -33,12 +33,12 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) {
         Equity.getInstance().getLogger().info("Client Active");
         Connection connection = new Connection();
-        ctx.channel().attr(EquityUtil.getConnectionKey()).set(connection);
         connection.setClientChannel(ctx.channel());
         connection.setState(Protocol.State.HANDSHAKE);
         connection.setActive(true);
         connection.setServer("Unknown");
         ConnectionManager.addConnection(connection);
+        ctx.channel().attr(EquityUtil.getConnectionKey()).set(connection);
         ctx.read();
     }
     

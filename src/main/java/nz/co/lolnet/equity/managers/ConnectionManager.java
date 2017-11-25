@@ -30,14 +30,17 @@ import nz.co.lolnet.equity.packets.SPacketServerInfo;
 import nz.co.lolnet.equity.text.Text;
 import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.PacketUtil;
+import org.apache.commons.lang3.StringUtils;
 
 import java.net.SocketAddress;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class ConnectionManager {
     
-    private static final List<Connection> connections = EquityUtil.newArrayList();
+    private static final List<Connection> connections = Collections.synchronizedList(EquityUtil.newArrayList());
     
     public static void addConnection(Connection connection) throws NullPointerException {
         Objects.requireNonNull(connection, "Connection cannot be null");
@@ -142,6 +145,12 @@ public class ConnectionManager {
         }
         
         channel.close();
+    }
+    
+    public static Optional<Connection> getConnection(String identity) {
+        synchronized (getConnections()) {
+            return getConnections().stream().filter(connection -> connection.getIdentity().isPresent() && StringUtils.equals(connection.getIdentity().get(), identity)).findFirst();
+        }
     }
     
     public static List<Connection> getConnections() {
