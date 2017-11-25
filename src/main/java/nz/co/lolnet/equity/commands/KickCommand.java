@@ -31,7 +31,7 @@ public class KickCommand extends AbstractCommand {
             Equity.getInstance().getLogger().info("Usage: {} {}", getName(), getUsage());
             return;
         }
-    
+        
         Optional<Connection> connection = ConnectionManager.getConnection(arguments.get(0));
         if (connection.isPresent() && connection.get().getIdentity().isPresent()) {
             ConnectionManager.removeConnection(connection.get());

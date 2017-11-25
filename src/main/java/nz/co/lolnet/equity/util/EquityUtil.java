@@ -57,11 +57,11 @@ public class EquityUtil {
     }
     
     public static AttributeKey<Connection> getConnectionKey() {
-        return AttributeKey.valueOf("PROXY_CONNECTION");
+        return AttributeKey.valueOf("proxy_connection");
     }
     
     public static AttributeKey<String> getSideKey() {
-        return AttributeKey.valueOf("PROXY_SIDE");
+        return AttributeKey.valueOf("proxy_side");
     }
     
     public static String getAddress(SocketAddress socketAddress) {

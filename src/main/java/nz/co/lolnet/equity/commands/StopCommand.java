@@ -25,7 +25,6 @@ public class StopCommand extends AbstractCommand {
     
     @Override
     public void execute(List<String> arguments) {
-        Equity.getInstance().getLogger().warn("Shutting down...");
         Equity.getInstance().setRunning(false);
     }
     

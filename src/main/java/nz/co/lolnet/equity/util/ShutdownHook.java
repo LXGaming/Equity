@@ -41,7 +41,6 @@ public class ShutdownHook extends Thread {
         }
         
         Equity.getInstance().getLogger().info("Shutting down...");
-        Equity.getInstance().setRunning(false);
         shutdownConnections();
         shutdownProxy();
         Equity.getInstance().getLogger().info("Shutdown complete.");
@@ -59,7 +58,7 @@ public class ShutdownHook extends Thread {
             }
             
             if (failed > 0) {
-                Equity.getInstance().getLogger().warn("Failed to remove {} Connections", failed);
+                Equity.getInstance().getLogger().warn("Failed to close {} Connections", failed);
             }
             
             Equity.getInstance().getLogger().info("Closed Connections.");

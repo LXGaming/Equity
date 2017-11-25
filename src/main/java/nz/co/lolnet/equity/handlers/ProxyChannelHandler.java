@@ -27,7 +27,6 @@ public class ProxyChannelHandler extends ChannelInitializer<Channel> {
     
     @Override
     protected void initChannel(Channel channel) {
-        Equity.getInstance().getLogger().info("Channel Init for {}", channel.attr(EquityUtil.getSideKey()).get());
         channel.pipeline().addFirst(ProxyDecodingHandler.getName(), new ProxyDecodingHandler());
         
         if (StringUtils.equals(channel.attr(EquityUtil.getSideKey()).get(), ProxyClientHandler.getName())) {

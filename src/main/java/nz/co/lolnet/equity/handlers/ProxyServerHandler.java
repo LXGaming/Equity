@@ -23,6 +23,7 @@ import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Protocol;
 import nz.co.lolnet.equity.entries.ProxyMessage;
+import nz.co.lolnet.equity.managers.ConnectionManager;
 import nz.co.lolnet.equity.managers.PacketManager;
 import nz.co.lolnet.equity.util.EquityUtil;
 
@@ -30,7 +31,6 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        Equity.getInstance().getLogger().info("Server Active");
         ctx.read();
     }
     
@@ -57,7 +57,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
             connection.getClientChannel().writeAndFlush(proxyMessage).addListener(EquityUtil.getFutureListener(ctx.channel()));
             return;
         }
-
+        
         throw new UnsupportedOperationException("Unsupported message received!");
     }
     
@@ -68,7 +68,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
             return;
         }
         
-        //ConnectionManager.removeConnection(connection);
+        ConnectionManager.removeConnection(connection);
     }
     
     @Override

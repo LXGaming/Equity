@@ -19,47 +19,47 @@ package nz.co.lolnet.equity.text;
 import nz.co.lolnet.equity.text.format.TextColor;
 
 public class LiteralText {
-
+    
     public static LiteralText.Builder builder() {
         return new LiteralText.Builder();
     }
-
+    
     public static class Builder extends TextComponent {
-
+        
         public TextComponent build() {
             return this;
         }
-
+        
         public Builder text(String text) {
             setText(text);
             return this;
         }
-
+        
         public Builder color(TextColor color) {
             setColor(color);
             return this;
         }
-
+        
         public Builder bold(boolean bold) {
             setBold(bold);
             return this;
         }
-
+        
         public Builder italic(boolean italic) {
             setItalic(italic);
             return this;
         }
-
+        
         public Builder obfuscated(boolean obfuscated) {
             setObfuscated(obfuscated);
             return this;
         }
-
+        
         public Builder strikethrough(boolean strikethrough) {
             setStrikethrough(strikethrough);
             return this;
         }
-
+        
         public Builder underline(boolean underline) {
             setUnderline(underline);
             return this;

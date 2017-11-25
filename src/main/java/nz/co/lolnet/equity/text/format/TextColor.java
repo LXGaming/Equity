@@ -17,11 +17,11 @@
 package nz.co.lolnet.equity.text.format;
 
 public class TextColor extends TextFormat {
-
+    
     public TextColor() {
         this(null, null, null);
     }
-
+    
     public TextColor(String id, String name, String code) {
         super(id, name, code);
     }
