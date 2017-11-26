@@ -26,7 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 public class ProxyChannelHandler extends ChannelInitializer<Channel> {
     
     @Override
-    protected void initChannel(Channel channel) {
+    protected void initChannel(Channel channel) throws Exception {
         channel.pipeline().addFirst(ProxyDecodingHandler.getName(), new ProxyDecodingHandler());
         
         if (StringUtils.equals(channel.attr(EquityUtil.getSideKey()).get(), ProxyClientHandler.getName())) {

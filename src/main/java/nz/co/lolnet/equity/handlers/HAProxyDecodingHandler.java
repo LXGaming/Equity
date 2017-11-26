@@ -46,7 +46,7 @@ public class HAProxyDecodingHandler extends ByteToMessageDecoder {
     }
     
     @Override
-    public void channelActive(ChannelHandlerContext ctx) {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
         try {
             setDecode(HAProxyMessageDecoder.class.getDeclaredMethod("decode", ChannelHandlerContext.class, ByteBuf.class, List.class));
             getDecode().setAccessible(true);
@@ -88,7 +88,7 @@ public class HAProxyDecodingHandler extends ByteToMessageDecoder {
             if (ipForward) {
                 int length = in.readerIndex();
                 in.readerIndex(0);
-                connection.getPacketQueue().add(PacketUtil.getByteBuf(ctx.alloc(), in, length));
+                ConnectionManager.addPacketQueue(connection, PacketUtil.getByteBuf(ctx.alloc(), in, length));
                 in.readerIndex(length);
             }
         });

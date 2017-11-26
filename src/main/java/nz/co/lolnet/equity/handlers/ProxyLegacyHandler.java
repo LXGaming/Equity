@@ -59,7 +59,7 @@ public class ProxyLegacyHandler extends ByteToMessageDecoder {
     }
     
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) throws Exception {
         Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
     }
     

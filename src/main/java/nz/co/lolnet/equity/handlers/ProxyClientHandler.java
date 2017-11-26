@@ -17,6 +17,7 @@
 package nz.co.lolnet.equity.handlers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import nz.co.lolnet.equity.Equity;
@@ -27,10 +28,11 @@ import nz.co.lolnet.equity.managers.ConnectionManager;
 import nz.co.lolnet.equity.managers.PacketManager;
 import nz.co.lolnet.equity.util.EquityUtil;
 
+@ChannelHandler.Sharable
 public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
     
     @Override
-    public void channelActive(ChannelHandlerContext ctx) {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
         Connection connection = new Connection();
         connection.setClientChannel(ctx.channel());
         connection.setState(Protocol.State.HANDSHAKE);
@@ -38,7 +40,6 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
         connection.setServer("Unknown");
         ConnectionManager.addConnection(connection);
         ctx.channel().attr(EquityUtil.getConnectionKey()).set(connection);
-        ctx.read();
     }
     
     @Override
@@ -49,7 +50,7 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
         }
         
         if (msg instanceof ByteBuf) {
-            connection.getServerChannel().writeAndFlush(msg).addListener(EquityUtil.getFutureListener(ctx.channel()));
+            connection.getServerChannel().writeAndFlush(msg);
             return;
         }
         
@@ -59,11 +60,10 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
             PacketManager.process(proxyMessage);
             if (connection.getServerChannel() == null) {
                 ConnectionManager.addPacketQueue(connection, proxyMessage);
-                ctx.read();
                 return;
             }
             
-            connection.getServerChannel().writeAndFlush(proxyMessage).addListener(EquityUtil.getFutureListener(ctx.channel()));
+            connection.getServerChannel().writeAndFlush(proxyMessage);
             return;
         }
         
@@ -71,7 +71,7 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
     }
     
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) {
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
         if (connection == null) {
             return;
@@ -81,7 +81,21 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
     }
     
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
+        if (connection == null || connection.getClientChannel() == null || connection.getServerChannel() == null) {
+            return;
+        }
+        
+        if (connection.getClientChannel().isWritable()) {
+            connection.getServerChannel().config().setAutoRead(true);
+        } else {
+            connection.getServerChannel().config().setAutoRead(false);
+        }
+    }
+    
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) throws Exception {
         Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
     }
     

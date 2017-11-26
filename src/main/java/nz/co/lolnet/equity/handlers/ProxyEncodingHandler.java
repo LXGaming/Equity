@@ -36,7 +36,6 @@ public class ProxyEncodingHandler extends MessageToByteEncoder<ProxyMessage> {
         PacketUtil.writeVarInt(out, length);
         out.writeBytes(msg.getByteBuf());
         msg.getByteBuf().release();
-        ctx.read();
     }
     
     public static String getName() {

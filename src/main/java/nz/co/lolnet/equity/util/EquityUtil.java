@@ -16,10 +16,8 @@
 
 package nz.co.lolnet.equity.util;
 
-import io.netty.channel.Channel;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.util.AttributeKey;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.text.Text;
 import nz.co.lolnet.equity.text.format.TextColors;
@@ -44,16 +42,6 @@ public class EquityUtil {
     
     public static Text.Builder getTextPrefix() {
         return Text.builder().append(Text.of("[" + Reference.APP_NAME + "] ").color(TextColors.BLUE).bold(true).build());
-    }
-    
-    public static GenericFutureListener<? extends Future<? super Void>> getFutureListener(Channel channel) {
-        return future -> {
-            if (future.isDone() && future.isSuccess()) {
-                channel.read();
-            } else {
-                channel.close();
-            }
-        };
     }
     
     public static AttributeKey<Connection> getConnectionKey() {
@@ -134,6 +122,10 @@ public class EquityUtil {
     
     public static ThreadFactory buildThreadFactory(String namingPattern) {
         return new BasicThreadFactory.Builder().namingPattern(namingPattern).daemon(true).priority(Thread.NORM_PRIORITY).build();
+    }
+    
+    public static WriteBufferWaterMark getWriteBufferWaterMark() {
+        return new WriteBufferWaterMark(512 * 1024, 2048 * 1024);
     }
     
     public static Optional<Path> getPath() {

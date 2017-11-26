@@ -17,6 +17,7 @@
 package nz.co.lolnet.equity.handlers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import nz.co.lolnet.equity.Equity;
@@ -27,11 +28,11 @@ import nz.co.lolnet.equity.managers.ConnectionManager;
 import nz.co.lolnet.equity.managers.PacketManager;
 import nz.co.lolnet.equity.util.EquityUtil;
 
+@ChannelHandler.Sharable
 public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     
     @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-        ctx.read();
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
     }
     
     @Override
@@ -42,7 +43,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
         }
         
         if (msg instanceof ByteBuf) {
-            connection.getClientChannel().writeAndFlush(msg).addListener(EquityUtil.getFutureListener(ctx.channel()));
+            connection.getClientChannel().writeAndFlush(msg);
             return;
         }
         
@@ -54,7 +55,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
                 throw new IllegalStateException("Client Channel does not exist!");
             }
             
-            connection.getClientChannel().writeAndFlush(proxyMessage).addListener(EquityUtil.getFutureListener(ctx.channel()));
+            connection.getClientChannel().writeAndFlush(proxyMessage);
             return;
         }
         
@@ -62,7 +63,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     }
     
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) {
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
         if (connection == null) {
             return;
@@ -72,7 +73,21 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     }
     
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
+        if (connection == null || connection.getClientChannel() == null || connection.getServerChannel() == null) {
+            return;
+        }
+        
+        if (connection.getServerChannel().isWritable()) {
+            connection.getClientChannel().config().setAutoRead(true);
+        } else {
+            connection.getClientChannel().config().setAutoRead(false);
+        }
+    }
+    
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) throws Exception {
         Equity.getInstance().getLogger().error("Exception caught in {}", getClass().getSimpleName(), throwable);
     }
     

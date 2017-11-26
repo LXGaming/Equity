@@ -18,6 +18,7 @@ package nz.co.lolnet.equity.managers;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -73,8 +74,9 @@ public class ProxyManager {
         serverBootstrap.channel(getEventLoopGroupClass());
         serverBootstrap.option(ChannelOption.SO_REUSEADDR, true);
         serverBootstrap.childAttr(EquityUtil.getSideKey(), ProxyClientHandler.getName());
-        serverBootstrap.childOption(ChannelOption.AUTO_READ, false);
+        serverBootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         serverBootstrap.childOption(ChannelOption.TCP_NODELAY, true);
+        serverBootstrap.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, EquityUtil.getWriteBufferWaterMark());
         serverBootstrap.childHandler(new ProxyChannelHandler());
         serverBootstrap.bind(port).addListener((ChannelFuture future) -> {
             if (future.isSuccess()) {
@@ -117,15 +119,18 @@ public class ProxyManager {
             bootstrap.group(getEventLoopGroup());
             bootstrap.channel(connection.getClientChannel().getClass());
             bootstrap.attr(EquityUtil.getSideKey(), ProxyServerHandler.getName());
-            bootstrap.option(ChannelOption.AUTO_READ, false);
+            bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
             bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Equity.getInstance().getConfig().map(Config::getConnectTimeout).orElse(0));
+            bootstrap.option(ChannelOption.WRITE_BUFFER_WATER_MARK, EquityUtil.getWriteBufferWaterMark());
             bootstrap.handler(new ProxyChannelHandler());
+            
             bootstrap.connect(server.getHost(), server.getPort()).addListener((ChannelFuture future) -> {
                 if (future.isSuccess()) {
                     future.channel().attr(EquityUtil.getConnectionKey()).set(connection);
                     server.getIdentity().ifPresent(connection::setServer);
                     connection.setServerChannel(future.channel());
-                    connection.getPacketQueue().forEach(object -> connection.getServerChannel().writeAndFlush(object).addListener(EquityUtil.getFutureListener(connection.getClientChannel())));
+                    connection.getPacketQueue().forEach(object -> connection.getServerChannel().write(object));
+                    connection.getServerChannel().flush();
                     connection.getPacketQueue().clear();
                 } else {
                     ConnectionManager.disconnect(connection, Equity.getInstance().getMessages().map(Messages::getError).orElse(null));

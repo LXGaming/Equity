@@ -21,6 +21,7 @@ import nz.co.lolnet.equity.util.EquityUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.SocketAddress;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,7 +38,7 @@ public class Connection {
     private boolean active;
     
     public Connection() {
-        packetQueue = EquityUtil.newArrayList();
+        packetQueue = Collections.synchronizedList(EquityUtil.newArrayList());
     }
     
     public Optional<String> getIdentity() {
@@ -57,8 +58,8 @@ public class Connection {
             return Optional.of(getSocketAddress());
         }
         
-        if (getClientChannel() != null && getClientChannel().localAddress() != null) {
-            return Optional.of(getClientChannel().localAddress());
+        if (getClientChannel() != null && getClientChannel().remoteAddress() != null) {
+            return Optional.of(getClientChannel().remoteAddress());
         }
         
         return Optional.empty();

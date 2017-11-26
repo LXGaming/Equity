@@ -53,9 +53,9 @@ public class ConnectionManager {
     public static void addPacketQueue(Connection connection, Object object) throws NullPointerException {
         Objects.requireNonNull(connection, "Connection cannot be null");
         Objects.requireNonNull(object, "Object cannot be null");
-        if (connection.getPacketQueue().size() >= 10) {
+        if (connection.getPacketQueue().size() >= 5) {
             connection.getIdentity().ifPresent(identity -> {
-                Equity.getInstance().getLogger().warn("{} -> Attempted to queue over 10 packets, Assuming malicious client!", identity);
+                Equity.getInstance().getLogger().warn("{} -> Attempted to queue over 5 packets, Assuming malicious client!", identity);
             });
             
             disconnect(connection, Equity.getInstance().getMessages().map(Messages::getError).orElse(null));
@@ -70,7 +70,7 @@ public class ConnectionManager {
         Objects.requireNonNull(socketAddress, "SocketAddress cannot be null");
         connection.setSocketAddress(socketAddress);
         connection.getAddress().ifPresent(address -> {
-            Equity.getInstance().getLogger().info("{} -> PROXY {}", EquityUtil.getAddress(connection.getClientChannel().localAddress()), EquityUtil.getAddress(address));
+            Equity.getInstance().getLogger().info("{} -> PROXY {}", EquityUtil.getAddress(connection.getClientChannel().remoteAddress()), EquityUtil.getAddress(address));
         });
     }
     
@@ -136,6 +136,7 @@ public class ConnectionManager {
             return;
         }
         
+        channel.config().setAutoRead(false);
         if (channel.hasAttr(EquityUtil.getConnectionKey())) {
             channel.attr(EquityUtil.getConnectionKey()).set(null);
         }
