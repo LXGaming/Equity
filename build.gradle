@@ -38,7 +38,7 @@ repositories {
 
 dependencies {
     compile("com.google.code.gson:gson:2.8.2")
-    compile("io.netty:netty-all:4.1.17.Final")
+    compile("io.netty:netty-all:4.1.18.Final")
     compile("org.apache.commons:commons-lang3:3.7")
     compile("org.apache.logging.log4j:log4j-core:2.10.0")
     compile("org.apache.logging.log4j:log4j-slf4j-impl:2.10.0")
