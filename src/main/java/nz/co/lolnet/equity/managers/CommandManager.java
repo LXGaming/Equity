@@ -33,7 +33,7 @@ import java.util.Optional;
 
 public class CommandManager {
     
-    private static final List<AbstractCommand> registeredCommands = EquityUtil.newArrayList();
+    private static final List<AbstractCommand> REGISTERED_COMMANDS = EquityUtil.newArrayList();
     
     public static void buildCommands() {
         getRegisteredCommands().add(new ConnectionCommand());
@@ -106,6 +106,6 @@ public class CommandManager {
     }
     
     public static List<AbstractCommand> getRegisteredCommands() {
-        return registeredCommands;
+        return REGISTERED_COMMANDS;
     }
 }

@@ -39,7 +39,7 @@ import java.util.Optional;
 
 public class PacketManager {
     
-    private static final Map<Protocol, Class<? extends AbstractPacket>> registeredPackets = EquityUtil.newHashMap();
+    private static final Map<Protocol, Class<? extends AbstractPacket>> REGISTERED_PACKETS = EquityUtil.newHashMap();
     
     public static void buildPackets() {
         getRegisteredPackets().put(new Protocol(0, 0, Protocol.State.HANDSHAKE, Protocol.Direction.SERVERBOUND), CPacketHandshake.class);
@@ -116,6 +116,6 @@ public class PacketManager {
     }
     
     private static Map<Protocol, Class<? extends AbstractPacket>> getRegisteredPackets() {
-        return registeredPackets;
+        return REGISTERED_PACKETS;
     }
 }

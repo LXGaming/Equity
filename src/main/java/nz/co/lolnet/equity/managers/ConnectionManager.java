@@ -40,7 +40,7 @@ import java.util.Optional;
 
 public class ConnectionManager {
     
-    private static final List<Connection> connections = Collections.synchronizedList(EquityUtil.newArrayList());
+    private static final List<Connection> CONNECTIONS = Collections.synchronizedList(EquityUtil.newArrayList());
     
     public static void addConnection(Connection connection) throws NullPointerException {
         Objects.requireNonNull(connection, "Connection cannot be null");
@@ -155,6 +155,6 @@ public class ConnectionManager {
     }
     
     public static List<Connection> getConnections() {
-        return connections;
+        return CONNECTIONS;
     }
 }

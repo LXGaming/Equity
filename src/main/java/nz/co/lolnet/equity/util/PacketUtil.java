@@ -21,7 +21,6 @@ import io.netty.buffer.ByteBufAllocator;
 import nz.co.lolnet.equity.Equity;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -108,7 +107,7 @@ public class PacketUtil {
     
     public static List<String> readStringArray(ByteBuf byteBuf) {
         int length = readVarInt(byteBuf);
-        List<String> list = new ArrayList<String>(length);
+        List<String> list = EquityUtil.newArrayList();
         for (int index = 0; index < length; index++) {
             list.add(readString(byteBuf));
         }
