@@ -66,16 +66,15 @@ public class Equity {
     }
     
     public void reloadLogger() {
-        getConfig().map(Config::isDebug).ifPresent(debug -> {
-            if (debug) {
-                ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
-                Configurator.setLevel(getLogger().getName(), Level.DEBUG);
-                getLogger().debug("Debug mode enabled.");
-            } else {
-                ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
-                Configurator.setLevel(getLogger().getName(), Level.INFO);
-            }
-        });
+        if (getConfig().map(Config::isDebug).orElse(false)) {
+            ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
+            Configurator.setLevel(getLogger().getName(), Level.DEBUG);
+            getLogger().debug("Debug mode enabled.");
+        } else {
+            ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
+            Configurator.setLevel(getLogger().getName(), Level.INFO);
+            getLogger().info("Debug mode disabled.");
+        }
     }
     
     public static Equity getInstance() {
