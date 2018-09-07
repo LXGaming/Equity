@@ -25,7 +25,7 @@ import nz.co.lolnet.equity.commands.KickCommand;
 import nz.co.lolnet.equity.commands.ListCommand;
 import nz.co.lolnet.equity.commands.ReloadCommand;
 import nz.co.lolnet.equity.commands.StopCommand;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -33,7 +33,7 @@ import java.util.Optional;
 
 public class CommandManager {
     
-    private static final List<AbstractCommand> REGISTERED_COMMANDS = EquityUtil.newArrayList();
+    private static final List<AbstractCommand> REGISTERED_COMMANDS = Toolbox.newArrayList();
     
     public static void buildCommands() {
         getRegisteredCommands().add(new ConnectionCommand());
@@ -81,10 +81,10 @@ public class CommandManager {
         }
         
         if (StringUtils.startsWith(message, "/")) {
-            return Optional.of(EquityUtil.newArrayList(StringUtils.split(EquityUtil.filter(StringUtils.substringAfter(message, "/")), " ")));
+            return Optional.of(Toolbox.newArrayList(StringUtils.split(Toolbox.filter(StringUtils.substringAfter(message, "/")), " ")));
         }
         
-        return Optional.of(EquityUtil.newArrayList(StringUtils.split(EquityUtil.filter(message), " ")));
+        return Optional.of(Toolbox.newArrayList(StringUtils.split(Toolbox.filter(message), " ")));
     }
     
     private static boolean checkCommandName(String target, String name) {

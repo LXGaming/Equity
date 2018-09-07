@@ -22,7 +22,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.managers.ConnectionManager;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 import java.util.List;
 
@@ -34,7 +34,7 @@ public class ProxyLegacyHandler extends ByteToMessageDecoder {
             return;
         }
         
-        Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
+        Connection connection = ctx.channel().attr(Toolbox.getConnectionKey()).get();
         if (connection == null || connection.getState() == null || !connection.isActive()) {
             in.skipBytes(in.readableBytes());
             return;

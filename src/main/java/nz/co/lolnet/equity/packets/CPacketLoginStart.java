@@ -18,8 +18,8 @@ package nz.co.lolnet.equity.packets;
 
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.entries.ProxyMessage;
-import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.PacketUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 public class CPacketLoginStart extends AbstractPacket {
     
@@ -30,7 +30,7 @@ public class CPacketLoginStart extends AbstractPacket {
         setUsername(PacketUtil.readString(proxyMessage.getByteBuf()));
         proxyMessage.getConnection().setUsername(getUsername());
         proxyMessage.getConnection().getAddress().ifPresent(address -> {
-            Equity.getInstance().getLogger().info("{} -> LOGIN {}", EquityUtil.getAddress(address), getUsername());
+            Equity.getInstance().getLogger().info("{} -> LOGIN {}", Toolbox.getAddress(address), getUsername());
         });
     }
     

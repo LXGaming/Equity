@@ -36,7 +36,7 @@ import nz.co.lolnet.equity.entries.Server;
 import nz.co.lolnet.equity.handlers.ProxyChannelHandler;
 import nz.co.lolnet.equity.handlers.ProxyClientHandler;
 import nz.co.lolnet.equity.handlers.ProxyServerHandler;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -52,14 +52,13 @@ public class ProxyManager {
     private static Class<? extends ServerSocketChannel> eventLoopGroupClass;
     
     public static void buildProxy() {
-        System.setProperty("java.net.preferIPv4Stack", "true");
         Equity.getInstance().getConfig().ifPresent(config -> {
             if (config.isNativeTransport() && Epoll.isAvailable()) {
-                setEventLoopGroup(new EpollEventLoopGroup(config.getMaxThreads(), EquityUtil.buildThreadFactory("Netty Epoll Thread #%d")));
+                setEventLoopGroup(new EpollEventLoopGroup(config.getMaxThreads(), Toolbox.buildThreadFactory("Netty Epoll Thread #%d")));
                 setEventLoopGroupClass(EpollServerSocketChannel.class);
                 Equity.getInstance().getLogger().info("Using Epoll Transport.");
             } else {
-                setEventLoopGroup(new NioEventLoopGroup(config.getMaxThreads(), EquityUtil.buildThreadFactory("Netty IO Thread #%d")));
+                setEventLoopGroup(new NioEventLoopGroup(config.getMaxThreads(), Toolbox.buildThreadFactory("Netty IO Thread #%d")));
                 setEventLoopGroupClass(NioServerSocketChannel.class);
                 Equity.getInstance().getLogger().info("Using NIO Transport.");
             }
@@ -73,14 +72,14 @@ public class ProxyManager {
         serverBootstrap.group(getEventLoopGroup());
         serverBootstrap.channel(getEventLoopGroupClass());
         serverBootstrap.option(ChannelOption.SO_REUSEADDR, true);
-        serverBootstrap.childAttr(EquityUtil.getSideKey(), ProxyClientHandler.getName());
+        serverBootstrap.childAttr(Toolbox.getSideKey(), ProxyClientHandler.getName());
         serverBootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         serverBootstrap.childOption(ChannelOption.TCP_NODELAY, true);
-        serverBootstrap.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, EquityUtil.getWriteBufferWaterMark());
+        serverBootstrap.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, Toolbox.getWriteBufferWaterMark());
         serverBootstrap.childHandler(new ProxyChannelHandler());
         serverBootstrap.bind(port).addListener((ChannelFuture future) -> {
             if (future.isSuccess()) {
-                Equity.getInstance().getLogger().info("Listening on {}", EquityUtil.getAddress(future.channel().localAddress()));
+                Equity.getInstance().getLogger().info("Listening on {}", Toolbox.getAddress(future.channel().localAddress()));
             } else {
                 Equity.getInstance().getLogger().warn("Could not bind to {}", port, future.cause());
             }
@@ -118,15 +117,15 @@ public class ProxyManager {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(getEventLoopGroup());
             bootstrap.channel(connection.getClientChannel().getClass());
-            bootstrap.attr(EquityUtil.getSideKey(), ProxyServerHandler.getName());
+            bootstrap.attr(Toolbox.getSideKey(), ProxyServerHandler.getName());
             bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
             bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Equity.getInstance().getConfig().map(Config::getConnectTimeout).orElse(0));
-            bootstrap.option(ChannelOption.WRITE_BUFFER_WATER_MARK, EquityUtil.getWriteBufferWaterMark());
+            bootstrap.option(ChannelOption.WRITE_BUFFER_WATER_MARK, Toolbox.getWriteBufferWaterMark());
             bootstrap.handler(new ProxyChannelHandler());
             
             bootstrap.connect(server.getHost(), server.getPort()).addListener((ChannelFuture future) -> {
                 if (future.isSuccess()) {
-                    future.channel().attr(EquityUtil.getConnectionKey()).set(connection);
+                    future.channel().attr(Toolbox.getConnectionKey()).set(connection);
                     server.getIdentity().ifPresent(connection::setServer);
                     connection.setServerChannel(future.channel());
                     connection.getPacketQueue().forEach(object -> connection.getServerChannel().write(object));
@@ -147,7 +146,7 @@ public class ProxyManager {
             return Optional.empty();
         }
         
-        List<Server> supportedServers = EquityUtil.newArrayList();
+        List<Server> supportedServers = Toolbox.newArrayList();
         servers.get().forEach(server -> {
             if (server.getVersions().contains(version)) {
                 supportedServers.add(server);

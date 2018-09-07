@@ -17,7 +17,7 @@
 package nz.co.lolnet.equity.commands;
 
 import nz.co.lolnet.equity.Equity;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 import java.util.List;
 
@@ -40,6 +40,6 @@ public class StopCommand extends AbstractCommand {
     
     @Override
     public List<String> getAliases() {
-        return EquityUtil.newArrayList("End");
+        return Toolbox.newArrayList("End");
     }
 }

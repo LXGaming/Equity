@@ -28,8 +28,8 @@ import nz.co.lolnet.equity.entries.ServerMessage;
 import nz.co.lolnet.equity.packets.SPacketDisconnect;
 import nz.co.lolnet.equity.packets.SPacketServerInfo;
 import nz.co.lolnet.equity.text.Text;
-import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.PacketUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.SocketAddress;
@@ -40,7 +40,7 @@ import java.util.Optional;
 
 public class ConnectionManager {
     
-    private static final List<Connection> CONNECTIONS = Collections.synchronizedList(EquityUtil.newArrayList());
+    private static final List<Connection> CONNECTIONS = Collections.synchronizedList(Toolbox.newArrayList());
     
     public static void addConnection(Connection connection) throws NullPointerException {
         Objects.requireNonNull(connection, "Connection cannot be null");
@@ -70,7 +70,7 @@ public class ConnectionManager {
         Objects.requireNonNull(socketAddress, "SocketAddress cannot be null");
         connection.setSocketAddress(socketAddress);
         connection.getAddress().ifPresent(address -> {
-            Equity.getInstance().getLogger().info("{} -> PROXY {}", EquityUtil.getAddress(connection.getClientChannel().remoteAddress()), EquityUtil.getAddress(address));
+            Equity.getInstance().getLogger().info("{} -> PROXY {}", Toolbox.getAddress(connection.getClientChannel().remoteAddress()), Toolbox.getAddress(address));
         });
     }
     
@@ -137,12 +137,12 @@ public class ConnectionManager {
         }
         
         channel.config().setAutoRead(false);
-        if (channel.hasAttr(EquityUtil.getConnectionKey())) {
-            channel.attr(EquityUtil.getConnectionKey()).set(null);
+        if (channel.hasAttr(Toolbox.getConnectionKey())) {
+            channel.attr(Toolbox.getConnectionKey()).set(null);
         }
         
-        if (channel.hasAttr(EquityUtil.getSideKey())) {
-            channel.attr(EquityUtil.getSideKey()).set(null);
+        if (channel.hasAttr(Toolbox.getSideKey())) {
+            channel.attr(Toolbox.getSideKey()).set(null);
         }
         
         channel.close();

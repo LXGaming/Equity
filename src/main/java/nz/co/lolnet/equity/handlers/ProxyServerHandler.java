@@ -26,7 +26,7 @@ import nz.co.lolnet.equity.entries.Protocol;
 import nz.co.lolnet.equity.entries.ProxyMessage;
 import nz.co.lolnet.equity.managers.ConnectionManager;
 import nz.co.lolnet.equity.managers.PacketManager;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 @ChannelHandler.Sharable
 public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
@@ -37,7 +37,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
+        Connection connection = ctx.channel().attr(Toolbox.getConnectionKey()).get();
         if (connection == null || connection.getState() == null || !connection.isActive()) {
             return;
         }
@@ -64,7 +64,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
+        Connection connection = ctx.channel().attr(Toolbox.getConnectionKey()).get();
         if (connection == null) {
             return;
         }
@@ -74,7 +74,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-        Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
+        Connection connection = ctx.channel().attr(Toolbox.getConnectionKey()).get();
         if (connection == null || connection.getClientChannel() == null || connection.getServerChannel() == null) {
             return;
         }

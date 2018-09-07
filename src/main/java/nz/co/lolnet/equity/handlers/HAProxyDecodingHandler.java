@@ -25,8 +25,8 @@ import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.configuration.Config;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.managers.ConnectionManager;
-import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.PacketUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -68,7 +68,7 @@ public class HAProxyDecodingHandler extends ByteToMessageDecoder {
     
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
+        Connection connection = ctx.channel().attr(Toolbox.getConnectionKey()).get();
         if (connection == null || isFinished() || !invokeDecode(ctx, in, out)) {
             return;
         }

@@ -21,6 +21,7 @@ import io.netty.util.AttributeKey;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.text.Text;
 import nz.co.lolnet.equity.text.format.TextColors;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
@@ -32,13 +33,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class EquityUtil {
+public class Toolbox {
     
     public static Text.Builder getTextPrefix() {
         return Text.builder().append(Text.of("[" + Reference.APP_NAME + "] ").color(TextColors.BLUE).bold(true).build());
@@ -81,7 +81,7 @@ public class EquityUtil {
      * @return The filtered {@link java.lang.String String}.
      */
     public static String filter(String string) {
-        return StringUtils.replaceAll(string, "[^\\x20-\\x7E\\x0A\\x0D]", "");
+        return RegExUtils.replaceAll(string, "[^\\x20-\\x7E\\x0A\\x0D]", "");
     }
     
     public static String getTimeStringFromSeconds(long time) {
@@ -138,12 +138,11 @@ public class EquityUtil {
     }
     
     @SafeVarargs
-    public static <E> ArrayList<E> newArrayList(E... elements) throws NullPointerException {
-        Objects.requireNonNull(elements);
+    public static <E> ArrayList<E> newArrayList(E... elements) {
         return Stream.of(elements).collect(Collectors.toCollection(ArrayList::new));
     }
     
     public static <K, V> HashMap<K, V> newHashMap() {
-        return new HashMap<K, V>();
+        return new HashMap<>();
     }
 }

@@ -17,7 +17,7 @@
 package nz.co.lolnet.equity.configuration;
 
 import nz.co.lolnet.equity.entries.Server;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 import java.util.List;
 
@@ -46,7 +46,7 @@ public class Config {
         setConnectTimeout(5000);
         setReadTimeout(30000);
         setShutdownTimeout(5000);
-        setServers(EquityUtil.newArrayList(new Server()));
+        setServers(Toolbox.newArrayList(new Server()));
     }
     
     public boolean isDebug() {

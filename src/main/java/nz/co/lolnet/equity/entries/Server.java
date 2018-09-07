@@ -16,7 +16,7 @@
 
 package nz.co.lolnet.equity.entries;
 
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -29,14 +29,14 @@ public class Server {
     private int port;
     private int timeout;
     private List<Integer> versions;
-    public transient List<String> players = EquityUtil.newArrayList();
+    public transient List<String> players = Toolbox.newArrayList();
     
     public Server() {
         setName("localhost");
         setHost("127.0.0.1");
         setPort(0);
         setTimeout(2000);
-        setVersions(EquityUtil.newArrayList(335, 316, 315, 210, 110, 109, 108, 107, 47));
+        setVersions(Toolbox.newArrayList(335, 316, 315, 210, 110, 109, 108, 107, 47));
     }
     
     public Optional<String> getIdentity() {

@@ -17,7 +17,7 @@
 package nz.co.lolnet.equity.entries;
 
 import io.netty.channel.Channel;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.SocketAddress;
@@ -38,7 +38,7 @@ public class Connection {
     private boolean active;
     
     public Connection() {
-        packetQueue = Collections.synchronizedList(EquityUtil.newArrayList());
+        packetQueue = Collections.synchronizedList(Toolbox.newArrayList());
     }
     
     public Optional<String> getIdentity() {
@@ -47,7 +47,7 @@ public class Connection {
         }
         
         if (getAddress().isPresent()) {
-            return Optional.of(EquityUtil.getAddress(getAddress().get()));
+            return Optional.of(Toolbox.getAddress(getAddress().get()));
         }
         
         return Optional.empty();

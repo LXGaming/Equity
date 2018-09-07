@@ -18,7 +18,7 @@ package nz.co.lolnet.equity.commands;
 
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.managers.ConnectionManager;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -28,13 +28,13 @@ public class ListCommand extends AbstractCommand {
     
     @Override
     public void execute(List<String> arguments) {
-        Map<String, List<String>> servers = EquityUtil.newHashMap();
+        Map<String, List<String>> servers = Toolbox.newHashMap();
         ConnectionManager.getConnections().forEach(connection -> {
             if (!connection.getIdentity().isPresent()) {
                 return;
             }
             
-            servers.putIfAbsent(connection.getServer(), EquityUtil.newArrayList());
+            servers.putIfAbsent(connection.getServer(), Toolbox.newArrayList());
             servers.get(connection.getServer()).add(connection.getIdentity().get());
         });
         

@@ -17,8 +17,8 @@
 package nz.co.lolnet.equity.commands;
 
 import nz.co.lolnet.equity.Equity;
-import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.Reference;
+import nz.co.lolnet.equity.util.Toolbox;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class InfoCommand extends AbstractCommand {
     @Override
     public void execute(List<String> arguments) {
         Equity.getInstance().getLogger().info("{} v{}", Reference.APP_NAME, Reference.APP_VERSION);
-        Equity.getInstance().getLogger().info("Uptime: {}", EquityUtil.getTimeStringFromSeconds(EquityUtil.getDuration(Equity.getInstance().getStartTime()).getSeconds()));
+        Equity.getInstance().getLogger().info("Uptime: {}", Toolbox.getTimeStringFromSeconds(Toolbox.getDuration(Equity.getInstance().getStartTime()).getSeconds()));
         Equity.getInstance().getLogger().info("Authors: {}", Reference.AUTHORS);
         Equity.getInstance().getLogger().info("Source: {}", Reference.SOURCE);
         Equity.getInstance().getLogger().info("Website: {}", Reference.WEBSITE);
@@ -45,6 +45,6 @@ public class InfoCommand extends AbstractCommand {
     
     @Override
     public List<String> getAliases() {
-        return EquityUtil.newArrayList("Version");
+        return Toolbox.newArrayList("Version");
     }
 }

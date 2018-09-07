@@ -21,8 +21,6 @@ import nz.co.lolnet.equity.managers.CommandManager;
 import nz.co.lolnet.equity.util.Reference;
 import nz.co.lolnet.equity.util.TerminalConsoleAppender;
 
-import java.util.Optional;
-
 public class Main {
     
     public static void main(String[] args) {
@@ -32,12 +30,7 @@ public class Main {
         
         TerminalConsoleAppender.buildTerminal(Reference.APP_NAME, equity.getConfig().map(Config::isJlineOverride).orElse(true));
         while (equity.isRunning()) {
-            Optional<String> line = TerminalConsoleAppender.readline();
-            if (!line.isPresent()) {
-                continue;
-            }
-            
-            CommandManager.process(line.get());
+            TerminalConsoleAppender.readline().ifPresent(CommandManager::process);
         }
     }
 }

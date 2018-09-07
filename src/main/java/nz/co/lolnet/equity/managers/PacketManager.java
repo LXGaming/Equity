@@ -30,8 +30,8 @@ import nz.co.lolnet.equity.packets.SPacketEncryptionRequest;
 import nz.co.lolnet.equity.packets.SPacketLoginSuccess;
 import nz.co.lolnet.equity.packets.SPacketPong;
 import nz.co.lolnet.equity.packets.SPacketServerInfo;
-import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.PacketUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 import java.util.Map;
 import java.util.Objects;
@@ -39,7 +39,7 @@ import java.util.Optional;
 
 public class PacketManager {
     
-    private static final Map<Protocol, Class<? extends AbstractPacket>> REGISTERED_PACKETS = EquityUtil.newHashMap();
+    private static final Map<Protocol, Class<? extends AbstractPacket>> REGISTERED_PACKETS = Toolbox.newHashMap();
     
     public static void buildPackets() {
         getRegisteredPackets().put(new Protocol(0, 0, Protocol.State.HANDSHAKE, Protocol.Direction.SERVERBOUND), CPacketHandshake.class);
@@ -101,7 +101,7 @@ public class PacketManager {
     public static Optional<Integer> getPacketId(Class<? extends AbstractPacket> abstractPacketClass, int version) {
         try {
             Objects.requireNonNull(abstractPacketClass);
-            Map<Integer, Integer> packets = EquityUtil.newHashMap();
+            Map<Integer, Integer> packets = Toolbox.newHashMap();
             getRegisteredPackets().forEach((key, value) -> {
                 if (value.equals(abstractPacketClass)) {
                     packets.put(key.getVersion(), key.getId());

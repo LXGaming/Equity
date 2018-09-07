@@ -107,7 +107,7 @@ public class PacketUtil {
     
     public static List<String> readStringArray(ByteBuf byteBuf) {
         int length = readVarInt(byteBuf);
-        List<String> list = EquityUtil.newArrayList();
+        List<String> list = Toolbox.newArrayList();
         for (int index = 0; index < length; index++) {
             list.add(readString(byteBuf));
         }

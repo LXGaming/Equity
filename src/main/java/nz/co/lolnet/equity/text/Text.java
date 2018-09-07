@@ -17,7 +17,7 @@
 package nz.co.lolnet.equity.text;
 
 import com.google.gson.Gson;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 import java.util.List;
 
@@ -63,7 +63,7 @@ public class Text extends TextComponent {
         private final List<TextComponent> children;
         
         public Builder() {
-            children = EquityUtil.newArrayList();
+            children = Toolbox.newArrayList();
         }
         
         public Text build() {

@@ -20,7 +20,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.configuration.Config;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 import org.apache.commons.lang3.StringUtils;
 
 public class ProxyChannelHandler extends ChannelInitializer<Channel> {
@@ -29,7 +29,7 @@ public class ProxyChannelHandler extends ChannelInitializer<Channel> {
     protected void initChannel(Channel channel) throws Exception {
         channel.pipeline().addFirst(ProxyDecodingHandler.getName(), new ProxyDecodingHandler());
         
-        if (StringUtils.equals(channel.attr(EquityUtil.getSideKey()).get(), ProxyClientHandler.getName())) {
+        if (StringUtils.equals(channel.attr(Toolbox.getSideKey()).get(), ProxyClientHandler.getName())) {
             channel.pipeline().addBefore(ProxyDecodingHandler.getName(), ProxyLegacyHandler.getName(), new ProxyLegacyHandler());
             if (Equity.getInstance().getConfig().map(Config::isProxyProtocol).orElse(false)) {
                 channel.pipeline().addFirst(HAProxyDecodingHandler.getName(), new HAProxyDecodingHandler());
@@ -38,7 +38,7 @@ public class ProxyChannelHandler extends ChannelInitializer<Channel> {
             channel.pipeline().addAfter(ProxyDecodingHandler.getName(), ProxyClientHandler.getName(), new ProxyClientHandler());
         }
         
-        if (StringUtils.equals(channel.attr(EquityUtil.getSideKey()).get(), ProxyServerHandler.getName())) {
+        if (StringUtils.equals(channel.attr(Toolbox.getSideKey()).get(), ProxyServerHandler.getName())) {
             channel.pipeline().addAfter(ProxyDecodingHandler.getName(), ProxyServerHandler.getName(), new ProxyServerHandler());
         }
         

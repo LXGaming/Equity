@@ -18,7 +18,7 @@ package nz.co.lolnet.equity.commands;
 
 import nz.co.lolnet.equity.Equity;
 import nz.co.lolnet.equity.managers.CommandManager;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -76,6 +76,6 @@ public class HelpCommand extends AbstractCommand {
     
     @Override
     public List<String> getAliases() {
-        return EquityUtil.newArrayList("?");
+        return Toolbox.newArrayList("?");
     }
 }

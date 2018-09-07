@@ -24,8 +24,8 @@ import io.netty.handler.codec.CorruptedFrameException;
 import nz.co.lolnet.equity.entries.Connection;
 import nz.co.lolnet.equity.entries.Protocol;
 import nz.co.lolnet.equity.entries.ProxyMessage;
-import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.PacketUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +34,7 @@ public class ProxyDecodingHandler extends ByteToMessageDecoder {
     
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        Connection connection = ctx.channel().attr(EquityUtil.getConnectionKey()).get();
+        Connection connection = ctx.channel().attr(Toolbox.getConnectionKey()).get();
         if (connection == null || connection.getState() == null || !connection.isActive()) {
             in.skipBytes(in.readableBytes());
             return;

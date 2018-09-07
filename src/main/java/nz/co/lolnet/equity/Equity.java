@@ -23,9 +23,9 @@ import nz.co.lolnet.equity.configuration.Messages;
 import nz.co.lolnet.equity.managers.CommandManager;
 import nz.co.lolnet.equity.managers.PacketManager;
 import nz.co.lolnet.equity.managers.ProxyManager;
-import nz.co.lolnet.equity.util.EquityUtil;
 import nz.co.lolnet.equity.util.Reference;
 import nz.co.lolnet.equity.util.ShutdownHook;
+import nz.co.lolnet.equity.util.Toolbox;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,7 +48,7 @@ public class Equity {
         instance = this;
         startTime = Instant.now();
         logger = LogManager.getLogger(Reference.APP_ID);
-        path = EquityUtil.getPath().orElse(null);
+        path = Toolbox.getPath().orElse(null);
         configuration = new Configuration();
     }
     
@@ -69,11 +69,11 @@ public class Equity {
         if (getConfig().map(Config::isDebug).orElse(false)) {
             ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
             Configurator.setLevel(getLogger().getName(), Level.DEBUG);
-            getLogger().debug("Debug mode enabled.");
+            getLogger().debug("Debug mode enabled");
         } else {
             ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
             Configurator.setLevel(getLogger().getName(), Level.INFO);
-            getLogger().info("Debug mode disabled.");
+            getLogger().info("Debug mode disabled");
         }
     }
     

@@ -17,7 +17,7 @@
 package nz.co.lolnet.equity.configuration;
 
 import nz.co.lolnet.equity.text.Text;
-import nz.co.lolnet.equity.util.EquityUtil;
+import nz.co.lolnet.equity.util.Toolbox;
 
 public class Messages {
     
@@ -26,9 +26,9 @@ public class Messages {
     private Text unsupported;
     
     public Messages() {
-        setError(EquityUtil.getTextPrefix().append(Text.of("Error")).build());
-        setUnavailable(EquityUtil.getTextPrefix().append(Text.of("Unavailable")).build());
-        setUnsupported(EquityUtil.getTextPrefix().append(Text.of("Unsupported")).build());
+        setError(Toolbox.getTextPrefix().append(Text.of("Error")).build());
+        setUnavailable(Toolbox.getTextPrefix().append(Text.of("Unavailable")).build());
+        setUnsupported(Toolbox.getTextPrefix().append(Text.of("Unsupported")).build());
     }
     
     public Text getError() {
