@@ -65,7 +65,7 @@ public class Configuration {
                 throw new IOException("File is blank!");
             }
             
-            Object jsonObject = getGson(object).fromJson(string, object.getClass());
+            Object jsonObject = getGson().fromJson(string, object.getClass());
             if (jsonObject == null) {
                 throw new JsonParseException("Failed to parse File!");
             }
@@ -93,7 +93,7 @@ public class Configuration {
                 Equity.getInstance().getLogger().info("Successfully created file {}.", file.getName());
             }
             
-            Files.write(file.toPath(), getGson(object).toJson(object, object.getClass()).getBytes(StandardCharsets.UTF_8));
+            Files.write(file.toPath(), getGson().toJson(object, object.getClass()).getBytes(StandardCharsets.UTF_8));
             return true;
         } catch (IOException | OutOfMemoryError | RuntimeException ex) {
             Equity.getInstance().getLogger().error("Encountered an error processing {}::saveObject", getClass().getSimpleName(), ex);
@@ -101,7 +101,7 @@ public class Configuration {
         }
     }
     
-    private Gson getGson(Object object) {
+    private Gson getGson() {
         return new GsonBuilder()
                 .disableHtmlEscaping()
                 .enableComplexMapKeySerialization()
