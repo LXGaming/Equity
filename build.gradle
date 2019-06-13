@@ -4,7 +4,7 @@ apply plugin: "signing"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-group = "nz.co.lolnet"
+group = "io.github.lxgaming"
 archivesBaseName = "Equity"
 version = "2.0.0"
 
@@ -31,7 +31,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes("Main-Class": "nz.co.lolnet.equity.Main")
+        attributes("Main-Class": "io.github.lxgaming.equity.Main")
     }
 
     from {
